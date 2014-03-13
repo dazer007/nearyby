@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent">
+
+    <LinearLayout
+            android:background="@drawable/bg_title_bar"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="2dp"
+            >
+        <ImageButton
+                android:id="@+id/btn_serach"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/abs__ic_search"
+                android:background="@drawable/btn_weight_selector"/>
+        <TextView
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="搜周边"
+                android:textSize="15dp"
+                android:textColor="@android:color/white"/>
+        <ImageButton
+                android:id="@+id/btn_setting"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_action_setting"
+                android:background="@drawable/btn_weight_selector"/>
+    </LinearLayout>
+
+
+    <ListView
+            android:id="@+id/type_listView"
+            android:layout_weight="1"
+            android:background="@android:color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:background="@drawable/bg_title_bar"
+            android:padding="4dp">
+        <TextView
+                android:id="@+id/current_location_text"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:lines="1"
+                android:ellipsize="end"
+                android:layout_height="wrap_content"
+                android:textColor="@android:color/black"
+                android:textSize="16dp"/>
+        <ImageButton
+                android:id="@+id/btn_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_localbar_location"
+                android:background="@drawable/btn_weight_selector"/>
+    </LinearLayout>
+</LinearLayout>
+
