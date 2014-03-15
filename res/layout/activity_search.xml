@@ -26,6 +26,7 @@
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
                 android:gravity="center"
+                android:singleLine="true"
                 android:textSize="15dp"
                 android:textColor="@android:color/white"
                 android:background="@drawable/abs__textfield_search_selected_holo_dark"
