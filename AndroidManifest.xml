@@ -18,6 +18,7 @@
         </activity>
         <activity android:name="com.dazhi.nearby.AbountActivity"/>
         <activity android:name="com.dazhi.nearby.SearchActivity"/>
+        <activity android:name="com.dazhi.nearby.SearchRefreshActivity"/>
 
         <!--百度地图的servlet-->
         <service android:name="com.baidu.location.f"

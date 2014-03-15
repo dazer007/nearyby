@@ -41,11 +41,26 @@
     </LinearLayout>
 
 
-    <ListView
-            android:id="@+id/type_listView"
-            android:layout_weight="1"
-            android:background="@android:color/white"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+    <!--<ListView-->
+            <!--android:id="@+id/type_listView"-->
+            <!--android:layout_weight="1"-->
+            <!--android:background="@android:color/white"-->
+            <!--android:layout_width="match_parent"-->
+            <!--android:layout_height="wrap_content"/>-->
+
+   <com.handmark.pulltorefresh.library.PullToRefreshListView
+           xmlns:ptr="http://schemas.android.com/apk/res-auto"
+           android:id="@+id/type_listView"
+           android:layout_weight="1"
+           android:background="@android:color/white"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+
+           ptr:ptrMode="pullUpFromBottom"
+           ptr:ptrHeaderTextColor="#ff0000"
+           ptr:ptrHeaderSubTextColor="#0000ff"
+           ptr:ptrAnimationStyle="flip"
+           ptr:ptrHeaderTextAppearance="@android:attr/textAppearanceMedium"
+           />
 </LinearLayout>
 

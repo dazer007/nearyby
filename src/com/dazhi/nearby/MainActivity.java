@@ -1,8 +1,11 @@
 package com.dazhi.nearby;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
@@ -26,6 +29,8 @@ public class MainActivity extends Activity {
     private MyLocationListener bdLocationListener;
     private BDLocation currentLocation;
 
+    private ProgressDialog dialog;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,7 +43,7 @@ public class MainActivity extends Activity {
         listView.setAdapter(arrayAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick (AdapterView<?> parent, View view, int position, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Toast.makeText(MainActivity.this, "" + datas.get(position), Toast.LENGTH_SHORT).show();
             }
         });
@@ -69,7 +74,8 @@ public class MainActivity extends Activity {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+//                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
+                Intent intent = new Intent(MainActivity.this, SearchRefreshActivity.class);
                 intent.putExtra("currentLocation", currentLocation);
                 MainActivity.this.startActivity(intent);
             }
@@ -117,11 +123,12 @@ public class MainActivity extends Activity {
      * 请求开启定位
      */
     private void startLocation() {
+        currentLocation = null;
         locationText.setText("" + "定位中，请稍等...");
         mLocClient.start(); // 开启地图服务
-        if (mLocClient != null && mLocClient.isStarted()){
-            mLocClient.requestLocation(); }
-        else {
+        if (mLocClient != null && mLocClient.isStarted()) {
+            mLocClient.requestLocation();
+        } else {
             Log.d("LocSDK3", "locClient is null or not started");
         }
     }
@@ -133,8 +140,8 @@ public class MainActivity extends Activity {
         if (mLocClient != null && mLocClient.isStarted()) {
             mLocClient.stop();
         }
+        if(dialog != null) { dialog.dismiss();}
     }
-
 
 
     private class MyLocationListener implements BDLocationListener {

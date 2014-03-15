@@ -4,12 +4,15 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.format.DateUtils;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.*;
 import com.baidu.location.BDLocation;
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.handmark.pulltorefresh.library.extras.SoundPullEventListener;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
@@ -30,13 +33,14 @@ import java.util.Map;
  * 搜索周边信息的Activity，用法参加百度map demo :PoiSearchDemo.java
  * 使用poi搜索功能
  */
-public class SearchActivity extends Activity implements View.OnClickListener {
+public class SearchRefreshActivity extends Activity implements View.OnClickListener {
     private ImageButton back, search;
     private EditText searchkey;
     private BDLocation currentLocation;
 
     private MyAdapter myBaseAdapter = null;
     private ArrayList<Map<String, String>> datas = new ArrayList<Map<String, String>>();
+    private PullToRefreshListView mPullRefreshListView;
     private ListView listView;
     private int load_Index = 1;
     private JSONObject rootJsonObject;
@@ -59,15 +63,53 @@ public class SearchActivity extends Activity implements View.OnClickListener {
         currentLocation = getIntent().getParcelableExtra("currentLocation");
 
         myBaseAdapter = new MyAdapter();
-        listView = (ListView) findViewById(R.id.type_listView);
-        this.addFooterMoreButton(true);
+        mPullRefreshListView = (PullToRefreshListView) findViewById(R.id.type_listView);
+        // Set a listener to be invoked when the list should be refreshed.
+        mPullRefreshListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener<ListView>() {
+            @Override
+            public void onRefresh(PullToRefreshBase<ListView> refreshView) {
+                String label = DateUtils.formatDateTime(getApplicationContext(), System.currentTimeMillis(),
+                        DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_ALL);
+
+                // Update the LastUpdatedLabel
+                refreshView.getLoadingLayoutProxy().setLastUpdatedLabel(label);
+
+                // Do work to refresh the list here.
+                searchPoiByAsycTask();
+            }
+        });
+
+        mPullRefreshListView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView absListView, int i) {
+            }
+
+            @Override
+            public void onScroll(AbsListView absListView, int i, int i2, int i3) {
+                mPullRefreshListView.getLoadingLayoutProxy().setRefreshingLabel("正在加载");
+                mPullRefreshListView.getLoadingLayoutProxy().setPullLabel("下拉加载更多");
+                mPullRefreshListView.getLoadingLayoutProxy().setReleaseLabel("释放开始加载");
+
+            }
+        });
+
+        /**
+         * Add Sound Event Listener
+         */
+        SoundPullEventListener<ListView> soundListener = new SoundPullEventListener<ListView>(this);
+        soundListener.addSoundEvent(PullToRefreshBase.State.PULL_TO_REFRESH, R.raw.pull_event);
+        soundListener.addSoundEvent(PullToRefreshBase.State.RESET, R.raw.reset_sound);
+        soundListener.addSoundEvent(PullToRefreshBase.State.REFRESHING, R.raw.refreshing_sound);
+        mPullRefreshListView.setOnPullEventListener(soundListener);
+
+        listView = mPullRefreshListView.getRefreshableView();
         listView.setAdapter(myBaseAdapter);
         listView.removeFooterView(moreTextView);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(SearchActivity.this, "wwww", Toast.LENGTH_SHORT).show();
+                Toast.makeText(SearchRefreshActivity.this, "wwww", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -101,7 +143,7 @@ public class SearchActivity extends Activity implements View.OnClickListener {
         getParams.add(new BasicNameValuePair("access_token", "2.00O2b7ECTKvEwD8507bbee2fHNrTqD"));
         getParams.add(new BasicNameValuePair("coordinate", currentLocation.getLongitude() + "," + currentLocation.getLatitude()));
         getParams.add(new BasicNameValuePair("range", "5000"));
-        getParams.add(new BasicNameValuePair("count", "20"));
+        getParams.add(new BasicNameValuePair("count", "10"));
         getParams.add(new BasicNameValuePair("page", load_Index + ""));
         Log.d(getClass().getName(), "q:" + searchkey.getText().toString());
         getParams.add(new BasicNameValuePair("q", searchkey.getText().toString()));
@@ -124,7 +166,7 @@ public class SearchActivity extends Activity implements View.OnClickListener {
 
             @Override
             protected void onPreExecute() {
-                dialog = new ProgressDialog(SearchActivity.this);
+                dialog = new ProgressDialog(SearchRefreshActivity.this);
                 super.onPreExecute();
             }
 
@@ -141,7 +183,7 @@ public class SearchActivity extends Activity implements View.OnClickListener {
                     rootJsonObject = new JSONObject(resultJsonStr);
 
                     if (rootJsonObject.optJSONArray("poilist") == null) {
-                        throw new  NullPointerException("没有数据了");
+                        throw new NullPointerException("没有数据了");
                     }
 
                 } catch (IOException e) {
@@ -161,12 +203,12 @@ public class SearchActivity extends Activity implements View.OnClickListener {
             @Override
             protected void onPostExecute(Integer integer) {
                 if (integer == ERROR_IOEXCEPTION) {
-                    Toast.makeText(SearchActivity.this, "网络错误，请稍后重试", Toast.LENGTH_SHORT).show();
-                    SearchActivity.this.addFooterMoreButton(false);
+                    Toast.makeText(SearchRefreshActivity.this, "网络错误，请稍后重试", Toast.LENGTH_SHORT).show();
                     return;
                 } else if (integer == ERROR_JSONException || integer == ERROR_NoMoreData) {
-                    Toast.makeText(SearchActivity.this, "没有数据了", Toast.LENGTH_SHORT).show();
-                    SearchActivity.this.addFooterMoreButton(false);
+                    Toast.makeText(SearchRefreshActivity.this, "没有数据了", Toast.LENGTH_SHORT).show();
+                    // Call onRefreshComplete when the list has been refreshed.
+                    mPullRefreshListView.onRefreshComplete();
                     return;
                 }
 
@@ -206,47 +248,14 @@ public class SearchActivity extends Activity implements View.OnClickListener {
             map.put("address", address);
             map.put("distance", distanceStr);
             datas.add(map);
+//            datas.addFirst(map);
         }
 
-        this.addFooterMoreButton(false);
+
+        // Call onRefreshComplete when the list has been refreshed.
+        mPullRefreshListView.onRefreshComplete();
         myBaseAdapter.notifyDataSetChanged();
 
-    }
-
-    private void addFooterMoreButton(boolean isFirst) {
-
-        try {
-            listView.removeFooterView(moreTextView);
-            listView.removeFooterView(loadingTextView);
-        } catch (ClassCastException e) {
-           Log.e(getClass().getName(), "有错", e);
-        }
-
-        moreTextView = new TextView(SearchActivity.this);
-        moreTextView.setText("加载更多");
-        moreTextView.setGravity(Gravity.CENTER);
-        moreTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SearchActivity.this.addLoadingText();
-                searchPoiByAsycTask();
-            }
-        });
-
-        if(isFirst  || (!isFirst && !datas.isEmpty())) {
-            listView.addFooterView(moreTextView);
-        }
-
-    }
-
-    private void addLoadingText() {
-        listView.removeFooterView(moreTextView);
-        listView.removeFooterView(loadingTextView);
-
-        loadingTextView = new TextView(SearchActivity.this);
-        loadingTextView.setText("加载中...");
-        loadingTextView.setGravity(Gravity.CENTER);
-        listView.addFooterView(loadingTextView);
     }
 
     /**
@@ -299,7 +308,7 @@ public class SearchActivity extends Activity implements View.OnClickListener {
             }
 
 
-            Map<String,String> currentLineMap = datas.get(position);
+            Map<String, String> currentLineMap = datas.get(position);
 
             TextView poi_name = (TextView) layout.findViewById(R.id.poi_name);
             TextView poi_address = (TextView) layout.findViewById(R.id.poi_address);
