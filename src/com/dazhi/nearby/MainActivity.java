@@ -1,11 +1,9 @@
 package com.dazhi.nearby;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
@@ -13,6 +11,9 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.dazhi.uitls.JsonUtils;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,22 +30,43 @@ public class MainActivity extends Activity {
     private MyLocationListener bdLocationListener;
     private BDLocation currentLocation;
 
-    private ProgressDialog dialog;
+    private String bigTypeName, middleTypeName;
+
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        bigTypeName = getIntent().getStringExtra("bigTypeName");
+        middleTypeName = getIntent().getStringExtra("middleTypeName");
+
         // 中间ListView
-        initDatas();
+        initActivityData();
         listView = (ListView) findViewById(R.id.type_listView);
         arrayAdapter = new ArrayAdapter<String>(this, R.layout.main_activity_item_list, R.id.listView_text, datas);
         listView.setAdapter(arrayAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(MainActivity.this, "" + datas.get(position), Toast.LENGTH_SHORT).show();
+            Intent intent = null;
+            if (bigTypeName == null && middleTypeName == null) { // 向二级菜单跳
+                intent = new Intent(MainActivity.this, MainSubMenuActivity.class);
+                intent.putExtra("bigTypeName", datas.get(position));
+                Toast.makeText(MainActivity.this, "1类" + datas.get(position), Toast.LENGTH_SHORT).show();
+            } else if (bigTypeName != null && middleTypeName == null) { // 向三级级菜单跳
+                intent = new Intent(MainActivity.this, MainSubMenuActivity.class);
+                intent.putExtra("bigTypeName", bigTypeName);
+                intent.putExtra("middleTypeName", datas.get(position));
+                Toast.makeText(MainActivity.this, "2类" + datas.get(position), Toast.LENGTH_SHORT).show();
+            } else if (bigTypeName != null && middleTypeName != null) {  // 向具体搜索页面跳
+                intent = new Intent(MainActivity.this, AbountActivity.class);
+                Toast.makeText(MainActivity.this, "3类", Toast.LENGTH_SHORT).show();
+            }
+            intent.putExtra("currentLocation", currentLocation);
+            intent.putExtra("curType", datas.get(position));
+            startActivity(intent);
+
             }
         });
 
@@ -74,7 +96,6 @@ public class MainActivity extends Activity {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Intent intent = new Intent(MainActivity.this, SearchActivity.class);
                 Intent intent = new Intent(MainActivity.this, SearchRefreshActivity.class);
                 intent.putExtra("currentLocation", currentLocation);
                 MainActivity.this.startActivity(intent);
@@ -140,7 +161,6 @@ public class MainActivity extends Activity {
         if (mLocClient != null && mLocClient.isStarted()) {
             mLocClient.stop();
         }
-        if(dialog != null) { dialog.dismiss();}
     }
 
 
@@ -165,15 +185,42 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void initDatas() {
-        datas.add("餐饮服务");
-        datas.add("购物服务");
-        datas.add("生活服务");
-        datas.add("体育休闲服务");
-        datas.add("医疗保健服务");
-        datas.add("住宿服务");
-        datas.add("科技文化服务");
-        datas.add("交通设施服务");
+    private void initActivityData() {
+        if (bigTypeName == null && middleTypeName == null) { // 顶级分类
+            initBigTypeDatas();
+        } else if (bigTypeName != null && middleTypeName == null) { // 二级分类
+            initMiddleTypeDatas();
+        } else if (bigTypeName != null && middleTypeName != null) {  // 三级分类
+            initSmallTypeDatas();
+        }
+    }
+
+    // 读取分类代码：http://open.weibo.com/wiki/Location/category
+    private void initBigTypeDatas() {
+        JSONArray jsonArray = JsonUtils.getBigTypeJsonArray(getApplicationContext());
+        for (int i = 0; jsonArray != null && i < jsonArray.length() ; ++i) {
+            JSONObject obj = (JSONObject) jsonArray.opt(i);
+            String bigTypeName = obj.opt("bigTypeName").toString();
+            datas.add(bigTypeName);
+            Log.d("bigTypeName value", i + ":" + bigTypeName);
+        }
+    }
+
+    private void initMiddleTypeDatas() {
+        JSONArray jsonArray = JsonUtils.getMiddleTypeJsonArray(getApplicationContext(), bigTypeName);
+        for (int i = 0; jsonArray != null &&  i < jsonArray.length(); ++i) {
+            JSONObject obj = (JSONObject) jsonArray.opt(i);
+            String middleTypeName = obj.opt("middleTypeName").toString();
+            datas.add(middleTypeName);
+            Log.d("middleTypeName value", i + ":" + middleTypeName);
+        }
+    }
+
+    private void initSmallTypeDatas() {
+        String[] arr = JsonUtils.getSmallTypeArray(getApplicationContext(), bigTypeName, middleTypeName);
+        for (int i = 0; arr != null && i < arr.length; ++i) {
+            datas.add(arr[i]);
+        }
     }
 
 }

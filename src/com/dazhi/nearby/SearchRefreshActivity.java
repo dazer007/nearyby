@@ -25,9 +25,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 搜索周边信息的Activity，用法参加百度map demo :PoiSearchDemo.java
@@ -47,7 +45,6 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
     private static final String MORE_DATA = "more data";
 
     private ProgressDialog dialog;
-    private TextView moreTextView, loadingTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,7 +84,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
             @Override
             public void onScroll(AbsListView absListView, int i, int i2, int i3) {
                 mPullRefreshListView.getLoadingLayoutProxy().setRefreshingLabel("正在加载");
-                mPullRefreshListView.getLoadingLayoutProxy().setPullLabel("下拉加载更多");
+                mPullRefreshListView.getLoadingLayoutProxy().setPullLabel("上拉加载更多");
                 mPullRefreshListView.getLoadingLayoutProxy().setReleaseLabel("释放开始加载");
 
             }
@@ -96,15 +93,14 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
         /**
          * Add Sound Event Listener
          */
-        SoundPullEventListener<ListView> soundListener = new SoundPullEventListener<ListView>(this);
-        soundListener.addSoundEvent(PullToRefreshBase.State.PULL_TO_REFRESH, R.raw.pull_event);
-        soundListener.addSoundEvent(PullToRefreshBase.State.RESET, R.raw.reset_sound);
-        soundListener.addSoundEvent(PullToRefreshBase.State.REFRESHING, R.raw.refreshing_sound);
-        mPullRefreshListView.setOnPullEventListener(soundListener);
+//        SoundPullEventListener<ListView> soundListener = new SoundPullEventListener<ListView>(this);
+//        soundListener.addSoundEvent(PullToRefreshBase.State.PULL_TO_REFRESH, R.raw.pull_event);
+//        soundListener.addSoundEvent(PullToRefreshBase.State.RESET, R.raw.reset_sound);
+//        soundListener.addSoundEvent(PullToRefreshBase.State.REFRESHING, R.raw.refreshing_sound);
+//        mPullRefreshListView.setOnPullEventListener(soundListener);
 
         listView = mPullRefreshListView.getRefreshableView();
         listView.setAdapter(myBaseAdapter);
-        listView.removeFooterView(moreTextView);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -143,7 +139,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
         getParams.add(new BasicNameValuePair("access_token", "2.00O2b7ECTKvEwD8507bbee2fHNrTqD"));
         getParams.add(new BasicNameValuePair("coordinate", currentLocation.getLongitude() + "," + currentLocation.getLatitude()));
         getParams.add(new BasicNameValuePair("range", "5000"));
-        getParams.add(new BasicNameValuePair("count", "10"));
+        getParams.add(new BasicNameValuePair("count", "20"));
         getParams.add(new BasicNameValuePair("page", load_Index + ""));
         Log.d(getClass().getName(), "q:" + searchkey.getText().toString());
         getParams.add(new BasicNameValuePair("q", searchkey.getText().toString()));
@@ -166,7 +162,13 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
 
             @Override
             protected void onPreExecute() {
-                dialog = new ProgressDialog(SearchRefreshActivity.this);
+                if (datas.isEmpty()) {
+                    dialog = new ProgressDialog(SearchRefreshActivity.this);
+                    dialog.setMessage("正在加载，请稍等");
+                    dialog.setCancelable(false);
+                    dialog.setCanceledOnTouchOutside(false);
+                    dialog.show();
+                }
                 super.onPreExecute();
             }
 
@@ -202,6 +204,9 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
 
             @Override
             protected void onPostExecute(Integer integer) {
+
+                dialog.dismiss();
+
                 if (integer == ERROR_IOEXCEPTION) {
                     Toast.makeText(SearchRefreshActivity.this, "网络错误，请稍后重试", Toast.LENGTH_SHORT).show();
                     return;

@@ -16,9 +16,10 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <activity android:name=".MainSubMenuActivity"/>
+        <activity android:name=".SearchRefreshWithRangeActivity"/>
         <activity android:name="com.dazhi.nearby.AbountActivity"/>
-        <activity android:name="com.dazhi.nearby.SearchActivity"/>
-        <activity android:name="com.dazhi.nearby.SearchRefreshActivity"/>
+         <activity android:name="com.dazhi.nearby.SearchRefreshActivity"/>
 
         <!--百度地图的servlet-->
         <service android:name="com.baidu.location.f"
