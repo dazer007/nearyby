@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:background="@android:color/white">
+
+    <RelativeLayout
+            android:background="@drawable/bg_title_bar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            >
+        <ImageButton
+                android:id="@+id/btn_back"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_nav_back"
+                android:layout_alignParentLeft="true"
+                android:background="@drawable/btn_weight_selector"/>
+        <TextView
+                android:id="@+id/searchkey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:textSize="15dp"
+                android:textColor="@android:color/white"
+                />
+        <ImageButton
+                android:id="@+id/btn_action"
+                android:layout_width="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_action_list"
+                android:background="@drawable/btn_weight_selector"/>
+        <ImageButton
+                android:id="@+id/btn_refresh"
+                android:layout_toLeftOf="@id/btn_action"
+                android:layout_centerVertical="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/ic_refresh"
+                android:background="@drawable/btn_weight_selector"/>
+    </RelativeLayout>
+
+    <Spinner
+            android:id="@+id/select_range"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:entries="@array/range"
+            android:gravity="center"
+            android:background="@drawable/bg_tab_top"/>
+
+    <!--<ListView-->
+    <!--android:id="@+id/type_listView"-->
+    <!--android:layout_weight="1"-->
+    <!--android:background="@android:color/white"-->
+    <!--android:layout_width="match_parent"-->
+    <!--android:layout_height="wrap_content"/>-->
+
+    <com.handmark.pulltorefresh.library.PullToRefreshListView
+            xmlns:ptr="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/type_listView"
+            android:layout_weight="1"
+            android:background="@android:color/white"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+
+            ptr:ptrMode="both"
+            ptr:ptrHeaderTextColor="#ff0000"
+            ptr:ptrHeaderSubTextColor="#0000ff"
+            ptr:ptrAnimationStyle="flip"/>
+</LinearLayout>
+
