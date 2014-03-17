@@ -24,6 +24,7 @@ public class MainActivity extends Activity {
     private ListView listView;
     private ImageButton searchButton, settingButton, locatioButton;
     private TextView locationText;
+    public  static int TIME_OUT = 30 * 1000; // 30m
 
     // 百度定位请求的客户端类 baidu LocationClient类必须在主线程中声明。需要Context类型的参数。
     private LocationClient mLocClient;
@@ -105,7 +106,9 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onResume() {
-        startLocation();
+        if(currentLocation == null) {
+            startLocation();
+        }
         super.onResume();
     }
 
@@ -117,7 +120,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
-        stopLocation();
+        //stopLocation();
         super.onPause();
     }
 

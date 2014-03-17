@@ -35,6 +35,8 @@ public class MainSubMenuActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_submenu);
 
+        currentLocation = getIntent().getParcelableExtra("currentLocation");
+
         bigTypeName = getIntent().getStringExtra("bigTypeName");
         middleTypeName = getIntent().getStringExtra("middleTypeName");
         currentLocation = getIntent().getParcelableExtra("currentLocation");
@@ -70,9 +72,10 @@ public class MainSubMenuActivity extends Activity {
                 intent.putExtra("bigTypeName", bigTypeName);
                 intent.putExtra("middleTypeName", datas.get(position));
             } else if (bigTypeName != null && middleTypeName != null) {  // 向具体搜索页面跳
-                intent = new Intent(MainSubMenuActivity.this, AbountActivity.class);
+                intent = new Intent(MainSubMenuActivity.this, SearchRefreshWithRangeActivity.class);
             }
             intent.putExtra("curType", datas.get(position));
+            intent.putExtra("currentLocation", currentLocation);
             startActivity(intent);
 
             }

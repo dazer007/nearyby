@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.ImageButton;
 
 /**
- * 版本信息的activity
+ * 设置的activity
  */
 public class AbountActivity  extends Activity{
     private ImageButton back;

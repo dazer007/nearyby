@@ -17,6 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainSubMenuActivity"/>
+        <activity android:name=".SearchActivity"/>
         <activity android:name=".SearchRefreshWithRangeActivity"/>
         <activity android:name="com.dazhi.nearby.AbountActivity"/>
          <activity android:name="com.dazhi.nearby.SearchRefreshActivity"/>

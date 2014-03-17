@@ -18,6 +18,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,8 +36,9 @@ import java.util.Map;
  * 使用poi搜索功能,指定搜索范围
  */
 public class SearchRefreshWithRangeActivity extends Activity implements View.OnClickListener {
-    private ImageButton back, search;
-    private EditText searchkey;
+    private ImageButton back, btn_refresh, btn_action;
+    private TextView textView;
+    private Spinner spinner;
     private BDLocation currentLocation;
 
     private MyAdapter myBaseAdapter = null;
@@ -43,22 +47,38 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private ListView listView;
     private int load_Index = 1;
     private JSONObject rootJsonObject;
-    private static final String MORE_DATA = "more data";
+
 
     private ProgressDialog dialog;
+    private String searchkey;
+    private int range;
+    private int[] ranges = {5000, 4000, 3000, 2000, 1000};
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_search);
+        setContentView(R.layout.activity_search_range);
+
+        textView = (TextView) findViewById(R.id.searchkey);
+        searchkey = getIntent().getStringExtra("curType");
+        textView.setText("" + searchkey);
+
+        spinner = (Spinner) findViewById(R.id.select_range);
+        spinner.setSelection(0);
+        range = ranges[0];
+        spinner.setOnItemSelectedListener(new OnSpinnerItemSelectedImpl());
+
+        currentLocation = getIntent().getParcelableExtra("currentLocation");
 
         back = (ImageButton) findViewById(R.id.btn_back);
         back.setOnClickListener(this);
-        search = (ImageButton) findViewById(R.id.btn_serach);
-        search.setOnClickListener(this);
-        searchkey = (EditText) findViewById(R.id.searchkey);
+        btn_refresh = (ImageButton) findViewById(R.id.btn_refresh);
+        btn_refresh.setOnClickListener(this);
+        btn_action = (ImageButton) findViewById(R.id.btn_action);
+        btn_action.setOnClickListener(this);
 
-        currentLocation = getIntent().getParcelableExtra("currentLocation");
+
 
         myBaseAdapter = new MyAdapter();
         mPullRefreshListView = (PullToRefreshListView) findViewById(R.id.type_listView);
@@ -73,13 +93,14 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 refreshView.getLoadingLayoutProxy().setLastUpdatedLabel(label);
 
                 // Do work to refresh the list here.
-                searchPoiByAsycTask();
+                startSearch();
             }
         });
 
         mPullRefreshListView.setOnScrollListener(new AbsListView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(AbsListView absListView, int i) {
+
             }
 
             @Override
@@ -109,25 +130,36 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 Toast.makeText(SearchRefreshWithRangeActivity.this, "wwww", Toast.LENGTH_SHORT).show();
             }
         });
+
+
     }
 
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
-            case R.id.btn_back: // 返回主界面
+            case R.id.btn_back: // 返回上一层界面
                 this.finish();
                 overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
                 break;
-            case R.id.btn_serach: // 进行搜索
-
-                if (currentLocation == null) {
-                    Toast.makeText(this, "没有数据", Toast.LENGTH_SHORT).show();
-                } else {
-                    datas.clear();
-                    load_Index = 0;
-                    this.searchPoiByAsycTask();
-                }
+            case R.id.btn_refresh: // 刷新
+                datas.clear();
+                load_Index = 0;
+                startSearch();
                 break;
+            case R.id.btn_action: // 查询结果展示在地图中
+
+                break;
+        }
+    }
+
+    private void startSearch() {
+        if (currentLocation != null) {
+            searchPoiByAsycTask();
+        } else {
+            Toast.makeText(this, "没有数据", Toast.LENGTH_SHORT).show();
+            if (dialog != null && dialog.isShowing()) {
+                dialog.dismiss();
+            }
         }
     }
 
@@ -139,11 +171,11 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         ArrayList<NameValuePair> getParams = new ArrayList<NameValuePair>();
         getParams.add(new BasicNameValuePair("access_token", "2.00O2b7ECTKvEwD8507bbee2fHNrTqD"));
         getParams.add(new BasicNameValuePair("coordinate", currentLocation.getLongitude() + "," + currentLocation.getLatitude()));
-        getParams.add(new BasicNameValuePair("range", "5000"));
+        getParams.add(new BasicNameValuePair("range", range + ""));
         getParams.add(new BasicNameValuePair("count", "20"));
         getParams.add(new BasicNameValuePair("page", load_Index + ""));
-        Log.d(getClass().getName(), "q:" + searchkey.getText().toString());
-        getParams.add(new BasicNameValuePair("q", searchkey.getText().toString()));
+        Log.d(getClass().getName(), "q:" + searchkey );
+        getParams.add(new BasicNameValuePair("q", searchkey));
 
 
         String getParamsStr = URLEncodedUtils.format(getParams, "UTF-8");
@@ -155,6 +187,14 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         final HttpGet request = new HttpGet(url);
 
         final DefaultHttpClient client = new DefaultHttpClient();
+
+        // httpClient参数设置，设置超时时间
+        HttpParams httpParameters = new BasicHttpParams();
+        // Sets the timeout until a connection is etablished.
+        HttpConnectionParams.setConnectionTimeout(httpParameters, MainActivity.TIME_OUT);
+        // Sets the default socket timeout (SO_TIMEOUT) in milliseconds which is the timeout for waiting for data.
+        HttpConnectionParams.setSoTimeout(httpParameters, MainActivity.TIME_OUT);
+        client.setParams(httpParameters);
 
         AsyncTask<Integer, Integer, Integer> task = new AsyncTask<Integer, Integer, Integer>() {
             private static final int ERROR_IOEXCEPTION = 1;
@@ -212,7 +252,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                     Toast.makeText(SearchRefreshWithRangeActivity.this, "网络错误，请稍后重试", Toast.LENGTH_SHORT).show();
                     return;
                 } else if (integer == ERROR_JSONException || integer == ERROR_NoMoreData) {
-                    Toast.makeText(SearchRefreshWithRangeActivity.this, "没有数据了", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(SearchRefreshWithRangeActivity.this, "亲，没有数据了", Toast.LENGTH_SHORT).show();
                     // Call onRefreshComplete when the list has been refreshed.
                     mPullRefreshListView.onRefreshComplete();
                     return;
@@ -328,4 +368,19 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         }
     }
 
+    private class OnSpinnerItemSelectedImpl implements AdapterView.OnItemSelectedListener {
+        @Override
+        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+            String[] allRange = getResources().getStringArray(R.array.range);
+            range = ranges[position];
+            load_Index = 0;
+            datas.clear();
+            startSearch();
+        }
+
+        @Override
+        public void onNothingSelected(AdapterView<?> adapterView) {
+
+        }
+    }
 }

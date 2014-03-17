@@ -19,6 +19,9 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.HttpConnectionParams;
+import org.apache.http.params.HttpParams;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -154,6 +157,13 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
         final HttpGet request = new HttpGet(url);
 
         final DefaultHttpClient client = new DefaultHttpClient();
+        // httpClient参数设置，设置超时时间
+        HttpParams httpParameters = new BasicHttpParams();
+        // Sets the timeout until a connection is etablished.
+        HttpConnectionParams.setConnectionTimeout(httpParameters, MainActivity.TIME_OUT);
+        // Sets the default socket timeout (SO_TIMEOUT) in milliseconds which is the timeout for waiting for data.
+        HttpConnectionParams.setSoTimeout(httpParameters, MainActivity.TIME_OUT);
+        client.setParams(httpParameters);
 
         AsyncTask<Integer, Integer, Integer> task = new AsyncTask<Integer, Integer, Integer>() {
             private static final int ERROR_IOEXCEPTION = 1;

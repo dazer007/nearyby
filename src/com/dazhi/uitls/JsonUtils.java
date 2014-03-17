@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
- * Created by Administrator on 14-3-16.
+ * weibo open 定位分类数(json)操作类
  */
 public class JsonUtils {
     /**
