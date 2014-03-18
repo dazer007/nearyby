@@ -169,7 +169,7 @@ public class MainActivity extends Activity {
 
     // 读取分类代码：http://open.weibo.com/wiki/Location/category
     private void initBigTypeDatas() {
-        JSONArray jsonArray = JsonUtils.getBigTypeJsonArray(getApplicationContext());
+        JSONArray jsonArray = JsonUtils.getInstance().getBigTypeJsonArray(getApplicationContext());
         for (int i = 0; jsonArray != null && i < jsonArray.length(); ++i) {
             JSONObject obj = (JSONObject) jsonArray.opt(i);
             String bigTypeName = obj.opt("bigTypeName").toString();

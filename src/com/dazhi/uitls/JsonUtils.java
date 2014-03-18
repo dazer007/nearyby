@@ -15,25 +15,42 @@ import java.io.InputStream;
  * weibo open 定位分类数(json)操作类
  */
 public class JsonUtils {
+
+    private JSONObject weibo_jsonObject;
+
+    private static final JsonUtils instance = new JsonUtils();
+
+    private JsonUtils() {
+    }
+
+    public static JsonUtils getInstance() {
+        return instance;
+    }
+
     /**
      * 获取本地assets目录中的json数据
      *
      * @param context
      * @param jsonPath assert目录中的json文件,如"app.json"
      * @return
-     * @throws IOException
-     * @throws org.json.JSONException
      */
-    public static JSONObject readAssertJSON(Context context, String jsonPath) throws IOException, JSONException {
+    public JSONObject readAssertJSON(Context context, String jsonPath)  {
         // 1：读取Assets的文本数据
         String jsonStr = "";
-        AssetManager assetManager = context.getAssets();
-        InputStream in = assetManager.open(jsonPath);
-        jsonStr = readInputStremText(in);
-        // 2 :获取JSONObject
         JSONObject jsonObject = null;
-        if (!jsonStr.isEmpty()) {
-            jsonObject = new JSONObject(jsonStr);
+        try {
+            AssetManager assetManager = context.getAssets();
+            InputStream in = assetManager.open(jsonPath);
+            jsonStr = readInputStremText(in);
+            // 2 :获取JSONObject
+            jsonObject = null;
+            if (!jsonStr.isEmpty()) {
+                jsonObject = new JSONObject(jsonStr);
+            }
+        } catch (IOException e) {
+            Log.e(getClass().getName(), e.getMessage(), e);
+        } catch (JSONException e) {
+            Log.e(getClass().getName(), e.getMessage(), e);
         }
         return jsonObject;
     }
@@ -44,7 +61,7 @@ public class JsonUtils {
      * @param in
      * @return
      */
-    public static String readInputStremText(InputStream in) throws IOException {
+    public String readInputStremText(InputStream in) throws IOException {
         String str = "";
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         if (in != null) {
@@ -76,16 +93,9 @@ public class JsonUtils {
      *
      * @return
      */
-    public static JSONArray getBigTypeJsonArray(Context context) {
+    public JSONArray getBigTypeJsonArray(Context context) {
         JSONArray jsonArray = null;
-        try {
-            JSONObject jsonObject = readAssertJSON(context, "weibo_location_type.json");
-            jsonArray = jsonObject.optJSONArray("大类");
-        } catch (IOException e) {
-            Log.e(JsonUtils.class.getName(), e.getMessage(), e);
-        } catch (JSONException e) {
-            Log.e(JsonUtils.class.getName(), e.getMessage(), e);
-        }
+        jsonArray = weibo_jsonObject.optJSONArray("大类");
         return jsonArray;
     }
 
@@ -95,7 +105,7 @@ public class JsonUtils {
      * @param bigTypeName
      * @return
      */
-    public static JSONArray getMiddleTypeJsonArray(Context context, String bigTypeName) {
+    public JSONArray getMiddleTypeJsonArray(Context context, String bigTypeName) {
         JSONObject middleTypeObj = null;
         JSONArray bigJsonArray = getBigTypeJsonArray(context);
         for (int i = 0; i < bigJsonArray.length(); ++i) {
@@ -121,7 +131,7 @@ public class JsonUtils {
      * @param middleTypeName 中类名称
      * @return
      */
-    public static String[] getSmallTypeArray(Context context, String bigTypeName, String middleTypeName) {
+    public String[] getSmallTypeArray(Context context, String bigTypeName, String middleTypeName) {
         String[] strArr = null;
 
         try {
@@ -155,4 +165,7 @@ public class JsonUtils {
         return strArr;
     }
 
+    public void setWeibo_jsonObject(JSONObject weibo_jsonObject) {
+        this.weibo_jsonObject = weibo_jsonObject;
+    }
 }

@@ -86,7 +86,7 @@ public class MainSubMenuActivity extends Activity {
      */
     private boolean hasSubMenu(int positon) {
         if (bigTypeName != null && middleTypeName == null) { // 判断二级菜单
-            JSONObject jsonObject = JsonUtils.getMiddleTypeJsonArray(this, bigTypeName).optJSONObject(positon);
+            JSONObject jsonObject = JsonUtils.getInstance().getMiddleTypeJsonArray(this, bigTypeName).optJSONObject(positon);
             if (jsonObject != null) {
                 String middleName = jsonObject.optString("middleTypeName");
                 JSONArray smallTypeArray = jsonObject.optJSONArray("小类");
@@ -112,7 +112,7 @@ public class MainSubMenuActivity extends Activity {
 
     // 读取分类代码：http://open.weibo.com/wiki/Location/category
     private void initBigTypeDatas() {
-        JSONArray jsonArray = JsonUtils.getBigTypeJsonArray(getApplicationContext());
+        JSONArray jsonArray = JsonUtils.getInstance().getInstance().getBigTypeJsonArray(getApplicationContext());
         for (int i = 0; jsonArray != null && i < jsonArray.length() ; ++i) {
             JSONObject obj = (JSONObject) jsonArray.opt(i);
             String bigTypeName = obj.opt("bigTypeName").toString();
@@ -122,7 +122,7 @@ public class MainSubMenuActivity extends Activity {
     }
 
     private void initMiddleTypeDatas() {
-        JSONArray jsonArray = JsonUtils.getMiddleTypeJsonArray(getApplicationContext(), bigTypeName);
+        JSONArray jsonArray = JsonUtils.getInstance().getMiddleTypeJsonArray(getApplicationContext(), bigTypeName);
         for (int i = 0; jsonArray != null &&  i < jsonArray.length(); ++i) {
             JSONObject obj = (JSONObject) jsonArray.opt(i);
             String middleTypeName = obj.opt("middleTypeName").toString();
@@ -132,7 +132,7 @@ public class MainSubMenuActivity extends Activity {
     }
 
     private void initSmallTypeDatas() {
-        String[] arr = JsonUtils.getSmallTypeArray(getApplicationContext(), bigTypeName, middleTypeName);
+        String[] arr = JsonUtils.getInstance().getSmallTypeArray(getApplicationContext(), bigTypeName, middleTypeName);
         for (int i = 0; arr != null && i < arr.length; ++i) {
             datas.add(arr[i]);
         }
