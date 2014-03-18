@@ -2,6 +2,7 @@ package com.dazhi.nearby;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -24,6 +25,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,7 +37,7 @@ public class SearchActivity extends Activity implements View.OnClickListener {
     private EditText searchkey;
     private BDLocation currentLocation;
 
-    private MyAdapter myBaseAdapter = null;
+    private SimpleAdapter simpleAdapter = null;
     private ArrayList<Map<String, String>> datas = new ArrayList<Map<String, String>>();
     private ListView listView;
     private int load_Index = 1;
@@ -58,18 +60,34 @@ public class SearchActivity extends Activity implements View.OnClickListener {
 
         currentLocation = getIntent().getParcelableExtra("currentLocation");
 
-        myBaseAdapter = new MyAdapter();
-        listView = (ListView) findViewById(R.id.type_listView);
+        simpleAdapter = new MySimpleAdapter(this, datas, R.layout.search_activity_item_list, new String[]{"name","address","distance"},new int[]{R.id.poi_name, R.id.poi_address, R.id.poi_distance});
+        listView = (ListView) findViewById(R.id.type_listView1);
         this.addFooterMoreButton(true);
-        listView.setAdapter(myBaseAdapter);
+        listView.setAdapter(simpleAdapter);
         listView.removeFooterView(moreTextView);
+    }
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(SearchActivity.this, "wwww", Toast.LENGTH_SHORT).show();
-            }
-        });
+    private class MySimpleAdapter extends SimpleAdapter {
+        public MySimpleAdapter(Context context, List<? extends Map<String, ?>> data, int resource, String[] from, int[] to) {
+            super(context, data, resource, from, to);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v = super.getView(position, convertView, parent);
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Toast.makeText(SearchActivity.this, "wwww", Toast.LENGTH_SHORT).show();
+                    displayMap();
+                }
+            });
+            return v;
+        }
+    }
+
+    private void displayMap() {
+
     }
 
     @Override
@@ -209,7 +227,7 @@ public class SearchActivity extends Activity implements View.OnClickListener {
         }
 
         this.addFooterMoreButton(false);
-        myBaseAdapter.notifyDataSetChanged();
+        simpleAdapter.notifyDataSetChanged();
 
     }
 
@@ -272,45 +290,4 @@ public class SearchActivity extends Activity implements View.OnClickListener {
         s = Math.round(s * 1000);
         return s;
     }
-
-    private class MyAdapter extends BaseAdapter {
-
-        @Override
-        public int getCount() {
-            return datas.size();
-        }
-
-        @Override
-        public Object getItem(int i) {
-            return datas.get(i);
-        }
-
-        @Override
-        public long getItemId(int i) {
-            return i;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            RelativeLayout layout = (RelativeLayout) convertView;
-            // 重用组件
-            if (convertView == null) {
-                layout = (RelativeLayout) getLayoutInflater().inflate(R.layout.search_activity_item_list, null, false);
-            }
-
-
-            Map<String,String> currentLineMap = datas.get(position);
-
-            TextView poi_name = (TextView) layout.findViewById(R.id.poi_name);
-            TextView poi_address = (TextView) layout.findViewById(R.id.poi_address);
-            TextView poi_distance = (TextView) layout.findViewById(R.id.poi_distance);
-
-            poi_name.setText(currentLineMap.get("name"));
-            poi_address.setText(currentLineMap.get("address"));
-            poi_distance.setText(currentLineMap.get("distance"));
-
-            return layout;
-        }
-    }
-
 }

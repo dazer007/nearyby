@@ -2,6 +2,8 @@ package com.dazhi.nearby;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.format.DateUtils;
@@ -39,7 +41,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
     private EditText searchkey;
     private BDLocation currentLocation;
 
-    private MyAdapter myBaseAdapter = null;
+    private SimpleAdapter simpleAdapter;
     private ArrayList<Map<String, String>> datas = new ArrayList<Map<String, String>>();
     private PullToRefreshListView mPullRefreshListView;
     private ListView listView;
@@ -62,7 +64,8 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
 
         currentLocation = getIntent().getParcelableExtra("currentLocation");
 
-        myBaseAdapter = new MyAdapter();
+
+        simpleAdapter = new MySimpleAdapter(this, datas, R.layout.search_activity_item_list, new String[]{"name","address","distance"},new int[]{R.id.poi_name, R.id.poi_address, R.id.poi_distance});
         mPullRefreshListView = (PullToRefreshListView) findViewById(R.id.type_listView);
         // Set a listener to be invoked when the list should be refreshed.
         mPullRefreshListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener<ListView>() {
@@ -103,14 +106,30 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
 //        mPullRefreshListView.setOnPullEventListener(soundListener);
 
         listView = mPullRefreshListView.getRefreshableView();
-        listView.setAdapter(myBaseAdapter);
+        listView.setAdapter(simpleAdapter);
+    }
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(SearchRefreshActivity.this, "wwww", Toast.LENGTH_SHORT).show();
-            }
-        });
+    private class MySimpleAdapter extends SimpleAdapter {
+        public MySimpleAdapter(Context context, List<? extends Map<String, ?>> data, int resource, String[] from, int[] to) {
+            super(context, data, resource, from, to);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            View v = super.getView(position, convertView, parent);
+            v.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Toast.makeText(SearchRefreshActivity.this, "wwww", Toast.LENGTH_SHORT).show();
+                    displayMap();
+                }
+            });
+            return v;
+        }
+    }
+
+    private void displayMap() {
+
     }
 
     @Override
@@ -269,7 +288,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
 
         // Call onRefreshComplete when the list has been refreshed.
         mPullRefreshListView.onRefreshComplete();
-        myBaseAdapter.notifyDataSetChanged();
+        simpleAdapter.notifyDataSetChanged();
 
     }
 
@@ -295,46 +314,6 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
         s = s * EARTH_RADIUS;
         s = Math.round(s * 1000);
         return s;
-    }
-
-    private class MyAdapter extends BaseAdapter {
-
-        @Override
-        public int getCount() {
-            return datas.size();
-        }
-
-        @Override
-        public Object getItem(int i) {
-            return datas.get(i);
-        }
-
-        @Override
-        public long getItemId(int i) {
-            return i;
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            RelativeLayout layout = (RelativeLayout) convertView;
-            // 重用组件
-            if (convertView == null) {
-                layout = (RelativeLayout) getLayoutInflater().inflate(R.layout.search_activity_item_list, null, false);
-            }
-
-
-            Map<String, String> currentLineMap = datas.get(position);
-
-            TextView poi_name = (TextView) layout.findViewById(R.id.poi_name);
-            TextView poi_address = (TextView) layout.findViewById(R.id.poi_address);
-            TextView poi_distance = (TextView) layout.findViewById(R.id.poi_distance);
-
-            poi_name.setText(currentLineMap.get("name"));
-            poi_address.setText(currentLineMap.get("address"));
-            poi_distance.setText(currentLineMap.get("distance"));
-
-            return layout;
-        }
     }
 
 }

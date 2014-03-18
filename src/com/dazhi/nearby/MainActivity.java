@@ -2,10 +2,12 @@ package com.dazhi.nearby;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.*;
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
@@ -24,7 +26,7 @@ public class MainActivity extends Activity {
     private ListView listView;
     private ImageButton searchButton, settingButton, locatioButton;
     private TextView locationText;
-    public  static int TIME_OUT = 30 * 1000; // 30m
+    public static int TIME_OUT = 30 * 1000; // 30m
 
     // 百度定位请求的客户端类 baidu LocationClient类必须在主线程中声明。需要Context类型的参数。
     private LocationClient mLocClient;
@@ -43,30 +45,10 @@ public class MainActivity extends Activity {
         middleTypeName = getIntent().getStringExtra("middleTypeName");
 
         // 中间ListView
-        initActivityData();
+        initBigTypeDatas();
         listView = (ListView) findViewById(R.id.type_listView);
-        arrayAdapter = new ArrayAdapter<String>(this, R.layout.main_activity_item_list, R.id.listView_text, datas);
+        arrayAdapter = new MyArrayAdapter<String>(this, R.layout.main_activity_item_list, R.id.listView_text, datas);
         listView.setAdapter(arrayAdapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            Intent intent = null;
-            if (bigTypeName == null && middleTypeName == null) { // 向二级菜单跳
-                intent = new Intent(MainActivity.this, MainSubMenuActivity.class);
-                intent.putExtra("bigTypeName", datas.get(position));
-            } else if (bigTypeName != null && middleTypeName == null) { // 向三级级菜单跳
-                intent = new Intent(MainActivity.this, MainSubMenuActivity.class);
-                intent.putExtra("bigTypeName", bigTypeName);
-                intent.putExtra("middleTypeName", datas.get(position));
-            } else if (bigTypeName != null && middleTypeName != null) {  // 向具体搜索页面跳
-                intent = new Intent(MainActivity.this, SearchRefreshWithRangeActivity.class);
-            }
-            intent.putExtra("currentLocation", currentLocation);
-            intent.putExtra("curType", datas.get(position));
-            startActivity(intent);
-
-            }
-        });
 
         // 定位和定位按钮
         locationText = (TextView) findViewById(R.id.current_location_text);
@@ -103,7 +85,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onResume() {
-        if(currentLocation == null) {
+        if (currentLocation == null) {
             startLocation();
         }
         super.onResume();
@@ -185,20 +167,10 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void initActivityData() {
-        if (bigTypeName == null && middleTypeName == null) { // 顶级分类
-            initBigTypeDatas();
-        } else if (bigTypeName != null && middleTypeName == null) { // 二级分类
-            initMiddleTypeDatas();
-        } else if (bigTypeName != null && middleTypeName != null) {  // 三级分类
-            initSmallTypeDatas();
-        }
-    }
-
     // 读取分类代码：http://open.weibo.com/wiki/Location/category
     private void initBigTypeDatas() {
         JSONArray jsonArray = JsonUtils.getBigTypeJsonArray(getApplicationContext());
-        for (int i = 0; jsonArray != null && i < jsonArray.length() ; ++i) {
+        for (int i = 0; jsonArray != null && i < jsonArray.length(); ++i) {
             JSONObject obj = (JSONObject) jsonArray.opt(i);
             String bigTypeName = obj.opt("bigTypeName").toString();
             datas.add(bigTypeName);
@@ -206,21 +178,39 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void initMiddleTypeDatas() {
-        JSONArray jsonArray = JsonUtils.getMiddleTypeJsonArray(getApplicationContext(), bigTypeName);
-        for (int i = 0; jsonArray != null &&  i < jsonArray.length(); ++i) {
-            JSONObject obj = (JSONObject) jsonArray.opt(i);
-            String middleTypeName = obj.opt("middleTypeName").toString();
-            datas.add(middleTypeName);
-            Log.d("middleTypeName value", i + ":" + middleTypeName);
+
+    private class MyArrayAdapter<T> extends ArrayAdapter {
+
+        public MyArrayAdapter(Context context, int resource, int textViewResourceId, List objects) {
+            super(context, resource, textViewResourceId, objects);
+        }
+
+        @Override
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            View view = super.getView(position, convertView, parent);
+            ImageButton btn = (ImageButton) view.findViewById(R.id.btn_location);
+            btn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startMyActivity(position);
+                }
+            });
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    startMyActivity(position);
+                }
+            });
+            return view;
         }
     }
 
-    private void initSmallTypeDatas() {
-        String[] arr = JsonUtils.getSmallTypeArray(getApplicationContext(), bigTypeName, middleTypeName);
-        for (int i = 0; arr != null && i < arr.length; ++i) {
-            datas.add(arr[i]);
-        }
+    private void startMyActivity(int position) {
+        // 向二级菜单跳
+        Intent intent = new Intent(MainActivity.this, MainSubMenuActivity.class);
+        intent.putExtra("bigTypeName", datas.get(position));
+        intent.putExtra("currentLocation", currentLocation);
+        intent.putExtra("curType", datas.get(position));
+        startActivity(intent);
     }
-
 }
