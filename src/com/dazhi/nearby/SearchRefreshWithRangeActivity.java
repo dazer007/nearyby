@@ -8,6 +8,7 @@ import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
 import android.widget.*;
 import com.baidu.location.BDLocation;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
@@ -52,7 +53,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private ProgressDialog dialog;
     private String searchkey;
     private int range;
-    private int[] ranges = {5000, 4000, 3000, 2000, 1000};
+    private int[] ranges = {10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000};
 
 
     @Override
@@ -65,8 +66,8 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         textView.setText("" + searchkey);
 
         spinner = (Spinner) findViewById(R.id.select_range);
-        spinner.setSelection(0);
-        range = ranges[0];
+        spinner.setSelection(7);
+        range = ranges[7];
         spinner.setOnItemSelectedListener(new OnSpinnerItemSelectedImpl());
 
         currentLocation = getIntent().getParcelableExtra("currentLocation");
@@ -77,7 +78,6 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         btn_refresh.setOnClickListener(this);
         btn_action = (ImageButton) findViewById(R.id.btn_action);
         btn_action.setOnClickListener(this);
-
 
 
         myBaseAdapter = new MyAdapter();
@@ -93,14 +93,13 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 refreshView.getLoadingLayoutProxy().setLastUpdatedLabel(label);
 
                 // Do work to refresh the list here.
-                startSearch();
+                searchPoiByAsycTask();
             }
         });
 
         mPullRefreshListView.setOnScrollListener(new AbsListView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(AbsListView absListView, int i) {
-
             }
 
             @Override
@@ -111,6 +110,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
             }
         });
+
 
         /**
          * Add Sound Event Listener
@@ -142,9 +142,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 overridePendingTransition(android.R.anim.slide_in_left, android.R.anim.slide_out_right);
                 break;
             case R.id.btn_refresh: // 刷新
-                datas.clear();
-                load_Index = 0;
-                startSearch();
+                toRefresh();
                 break;
             case R.id.btn_action: // 查询结果展示在地图中
 
@@ -161,6 +159,12 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 dialog.dismiss();
             }
         }
+    }
+
+    private void toRefresh() { // 刷新操作
+        datas.clear();
+        load_Index = 0;
+        startSearch();
     }
 
     private void searchPoiByAsycTask() {
@@ -235,7 +239,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 } catch (JSONException e) {
                     Log.e(getClass().getName(), e.getMessage(), e);
                     return ERROR_JSONException;
-                } catch (NullPointerException e) {
+                } catch (Exception e) {
                     Log.e(getClass().getName(), e.getMessage(), e);
                     return ERROR_NoMoreData;
                 }
@@ -247,14 +251,14 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             protected void onPostExecute(Integer integer) {
 
                 dialog.dismiss();
+                // Call onRefreshComplete when the list has been refreshed.
+                mPullRefreshListView.onRefreshComplete();
 
                 if (integer == ERROR_IOEXCEPTION) {
                     Toast.makeText(SearchRefreshWithRangeActivity.this, "网络错误，请稍后重试", Toast.LENGTH_SHORT).show();
                     return;
                 } else if (integer == ERROR_JSONException || integer == ERROR_NoMoreData) {
                     Toast.makeText(SearchRefreshWithRangeActivity.this, "亲，没有数据了", Toast.LENGTH_SHORT).show();
-                    // Call onRefreshComplete when the list has been refreshed.
-                    mPullRefreshListView.onRefreshComplete();
                     return;
                 }
 

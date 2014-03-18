@@ -56,8 +56,6 @@
     <!--android:layout_weight="1"-->
     <!--android:background="@android:color/white"-->
     <!--android:layout_width="match_parent"-->
-    <!--android:layout_height="wrap_content"/>-->
-
     <com.handmark.pulltorefresh.library.PullToRefreshListView
             xmlns:ptr="http://schemas.android.com/apk/res-auto"
             android:id="@+id/type_listView"
@@ -66,9 +64,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
 
-            ptr:ptrMode="both"
+            ptr:ptrMode="pullUpFromBottom"
             ptr:ptrHeaderTextColor="#ff0000"
             ptr:ptrHeaderSubTextColor="#0000ff"
-            ptr:ptrAnimationStyle="flip"/>
+            ptr:ptrAnimationStyle="flip"
+            ptr:ptrHeaderTextAppearance="@android:attr/textAppearanceMedium"
+
+
+            android:cacheColorHint="#00000000"
+            android:divider="#19000000"
+            android:dividerHeight="4dp"
+            android:fadingEdge="none"
+            android:fastScrollEnabled="false"
+            android:footerDividersEnabled="false"
+            android:headerDividersEnabled="false"
+            android:smoothScrollbar="true"
+            />
 </LinearLayout>
 

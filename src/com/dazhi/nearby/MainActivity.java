@@ -54,15 +54,12 @@ public class MainActivity extends Activity {
             if (bigTypeName == null && middleTypeName == null) { // 向二级菜单跳
                 intent = new Intent(MainActivity.this, MainSubMenuActivity.class);
                 intent.putExtra("bigTypeName", datas.get(position));
-                Toast.makeText(MainActivity.this, "1类" + datas.get(position), Toast.LENGTH_SHORT).show();
             } else if (bigTypeName != null && middleTypeName == null) { // 向三级级菜单跳
                 intent = new Intent(MainActivity.this, MainSubMenuActivity.class);
                 intent.putExtra("bigTypeName", bigTypeName);
                 intent.putExtra("middleTypeName", datas.get(position));
-                Toast.makeText(MainActivity.this, "2类" + datas.get(position), Toast.LENGTH_SHORT).show();
             } else if (bigTypeName != null && middleTypeName != null) {  // 向具体搜索页面跳
-                intent = new Intent(MainActivity.this, AbountActivity.class);
-                Toast.makeText(MainActivity.this, "3类", Toast.LENGTH_SHORT).show();
+                intent = new Intent(MainActivity.this, SearchRefreshWithRangeActivity.class);
             }
             intent.putExtra("currentLocation", currentLocation);
             intent.putExtra("curType", datas.get(position));

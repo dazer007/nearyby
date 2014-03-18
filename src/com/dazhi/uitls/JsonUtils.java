@@ -136,15 +136,17 @@ public class JsonUtils {
                 }
             }
 
-            JSONArray jsonArr = smallTypeObj.optJSONArray("小类");
-            if (jsonArr != null) {
-                strArr = new String[jsonArr.length()];
+            if (smallTypeObj != null) {
+                JSONArray jsonArr = smallTypeObj.optJSONArray("小类");
+                if (jsonArr != null) {
+                    strArr = new String[jsonArr.length()];
 
-                strArr = new String[jsonArr.length()];
-                for (int i = 0; i < strArr.length; ++i) {
-                    strArr[i] = jsonArr.getString(i);
+                    strArr = new String[jsonArr.length()];
+                    for (int i = 0; i < strArr.length; ++i) {
+                        strArr[i] = jsonArr.getString(i);
+                    }
+
                 }
-
             }
         } catch (JSONException e) {
             Log.e(JsonUtils.class.getName(), e.getMessage(), e);

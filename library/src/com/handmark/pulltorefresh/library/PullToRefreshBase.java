@@ -1618,4 +1618,15 @@ public abstract class PullToRefreshBase<T extends View> extends LinearLayout imp
 		void onSmoothScrollFinished();
 	}
 
+    /**
+     * 下面的两个方法是自己新添加的
+     * @return
+     */
+    public boolean isHeaderShown() {
+        return getHeaderLayout().isShown();
+    }
+
+    public boolean isFooterShown() {
+        return getFooterLayout().isShown();
+    }
 }

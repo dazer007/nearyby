@@ -67,11 +67,11 @@ public class MainSubMenuActivity extends Activity {
             if (bigTypeName == null && middleTypeName == null) { // 向二级菜单跳
                 intent = new Intent(MainSubMenuActivity.this, MainSubMenuActivity.class);
                 intent.putExtra("bigTypeName", datas.get(position));
-            } else if (bigTypeName != null && middleTypeName == null) { // 向三级级菜单跳
+            } else if (bigTypeName != null && middleTypeName == null && hasSubMenu()) { // 向三级级菜单跳
                 intent = new Intent(MainSubMenuActivity.this, MainSubMenuActivity.class);
                 intent.putExtra("bigTypeName", bigTypeName);
                 intent.putExtra("middleTypeName", datas.get(position));
-            } else if (bigTypeName != null && middleTypeName != null) {  // 向具体搜索页面跳
+            } else {  // 向具体搜索页面跳
                 intent = new Intent(MainSubMenuActivity.this, SearchRefreshWithRangeActivity.class);
             }
             intent.putExtra("curType", datas.get(position));
@@ -90,6 +90,15 @@ public class MainSubMenuActivity extends Activity {
         } else if (bigTypeName != null && middleTypeName != null) {  // 三级分类
             initSmallTypeDatas();
         }
+    }
+
+    /**
+     * 判断(中类)是否有子菜单
+     * @return 有，返回true
+     */
+    private boolean hasSubMenu() {
+        String[] smallTypeArray = JsonUtils.getSmallTypeArray(getApplicationContext(), bigTypeName, middleTypeName);
+        return smallTypeArray == null ? false : true;
     }
 
     // 读取分类代码：http://open.weibo.com/wiki/Location/category
