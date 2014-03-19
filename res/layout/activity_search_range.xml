@@ -51,11 +51,6 @@
             android:gravity="center"
             android:background="@drawable/bg_tab_top"/>
 
-    <!--<ListView-->
-    <!--android:id="@+id/type_listView"-->
-    <!--android:layout_weight="1"-->
-    <!--android:background="@android:color/white"-->
-    <!--android:layout_width="match_parent"-->
     <com.handmark.pulltorefresh.library.PullToRefreshListView
             xmlns:ptr="http://schemas.android.com/apk/res-auto"
             android:id="@+id/type_listView"
@@ -68,8 +63,6 @@
             ptr:ptrHeaderTextColor="#ff0000"
             ptr:ptrHeaderSubTextColor="#0000ff"
             ptr:ptrAnimationStyle="flip"
-            ptr:ptrHeaderTextAppearance="@android:attr/textAppearanceMedium"
-
 
             android:cacheColorHint="#00000000"
             android:divider="#19000000"

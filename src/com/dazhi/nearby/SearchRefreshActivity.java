@@ -47,7 +47,6 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
     private ListView listView;
     private int load_Index = 1;
     private JSONObject rootJsonObject;
-    private static final String MORE_DATA = "more data";
 
     private ProgressDialog dialog;
 
@@ -99,11 +98,11 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
         /**
          * Add Sound Event Listener
          */
-//        SoundPullEventListener<ListView> soundListener = new SoundPullEventListener<ListView>(this);
-//        soundListener.addSoundEvent(PullToRefreshBase.State.PULL_TO_REFRESH, R.raw.pull_event);
-//        soundListener.addSoundEvent(PullToRefreshBase.State.RESET, R.raw.reset_sound);
-//        soundListener.addSoundEvent(PullToRefreshBase.State.REFRESHING, R.raw.refreshing_sound);
-//        mPullRefreshListView.setOnPullEventListener(soundListener);
+        SoundPullEventListener<ListView> soundListener = new SoundPullEventListener<ListView>(this);
+        soundListener.addSoundEvent(PullToRefreshBase.State.PULL_TO_REFRESH, R.raw.pull_event);
+        soundListener.addSoundEvent(PullToRefreshBase.State.RESET, R.raw.reset_sound);
+        soundListener.addSoundEvent(PullToRefreshBase.State.REFRESHING, R.raw.refreshing_sound);
+        mPullRefreshListView.setOnPullEventListener(soundListener);
 
         listView = mPullRefreshListView.getRefreshableView();
         listView.setAdapter(simpleAdapter);
@@ -282,7 +281,6 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
             map.put("address", address);
             map.put("distance", distanceStr);
             datas.add(map);
-//            datas.addFirst(map);
         }
 
 

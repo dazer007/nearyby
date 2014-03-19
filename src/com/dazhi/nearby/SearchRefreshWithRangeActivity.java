@@ -13,6 +13,7 @@ import android.widget.*;
 import com.baidu.location.BDLocation;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
+import com.handmark.pulltorefresh.library.extras.SoundPullEventListener;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
@@ -115,22 +116,14 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         /**
          * Add Sound Event Listener
          */
-//        SoundPullEventListener<ListView> soundListener = new SoundPullEventListener<ListView>(this);
-//        soundListener.addSoundEvent(PullToRefreshBase.State.PULL_TO_REFRESH, R.raw.pull_event);
-//        soundListener.addSoundEvent(PullToRefreshBase.State.RESET, R.raw.reset_sound);
-//        soundListener.addSoundEvent(PullToRefreshBase.State.REFRESHING, R.raw.refreshing_sound);
-//        mPullRefreshListView.setOnPullEventListener(soundListener);
+        SoundPullEventListener<ListView> soundListener = new SoundPullEventListener<ListView>(this);
+        soundListener.addSoundEvent(PullToRefreshBase.State.PULL_TO_REFRESH, R.raw.pull_event);
+        soundListener.addSoundEvent(PullToRefreshBase.State.RESET, R.raw.reset_sound);
+        soundListener.addSoundEvent(PullToRefreshBase.State.REFRESHING, R.raw.refreshing_sound);
+        mPullRefreshListView.setOnPullEventListener(soundListener);
 
         listView = mPullRefreshListView.getRefreshableView();
         listView.setAdapter(myBaseAdapter);
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Toast.makeText(SearchRefreshWithRangeActivity.this, "wwww", Toast.LENGTH_SHORT).show();
-            }
-        });
-
 
     }
 
@@ -298,7 +291,6 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             map.put("address", address);
             map.put("distance", distanceStr);
             datas.add(map);
-//            datas.addFirst(map);
         }
 
 
@@ -368,6 +360,14 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             poi_address.setText(currentLineMap.get("address"));
             poi_distance.setText(currentLineMap.get("distance"));
 
+            if (convertView != null) {
+                convertView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        Toast.makeText(SearchRefreshWithRangeActivity.this, "bbb", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
             return layout;
         }
     }
