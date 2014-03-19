@@ -8,9 +8,11 @@ import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
+import android.view.ViewStub;
 import android.widget.*;
 import com.baidu.location.BDLocation;
+import com.baidu.mapapi.map.*;
+import com.baidu.platform.comapi.basestruct.GeoPoint;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.handmark.pulltorefresh.library.extras.SoundPullEventListener;
@@ -44,7 +46,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private BDLocation currentLocation;
 
     private MyAdapter myBaseAdapter = null;
-    private ArrayList<Map<String, String>> datas = new ArrayList<Map<String, String>>();
+    private ArrayList<Map<String, Object>> datas = new ArrayList<Map<String, Object>>();
     private PullToRefreshListView mPullRefreshListView;
     private ListView listView;
     private int load_Index = 1;
@@ -56,6 +58,11 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private int range;
     private int[] ranges = {10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000};
 
+
+    private MapView mapView;
+    private MapController mapController;
+    private MyLocationOverlay myLocationOverlay; // 当前位置的覆盖层
+    private ItemizedOverlay itemizedOverlay;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,7 +145,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 toRefresh();
                 break;
             case R.id.btn_action: // 查询结果展示在地图中
-
+                displayMapPOI();
                 break;
         }
     }
@@ -171,7 +178,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         getParams.add(new BasicNameValuePair("range", range + ""));
         getParams.add(new BasicNameValuePair("count", "20"));
         getParams.add(new BasicNameValuePair("page", load_Index + ""));
-        Log.d(getClass().getName(), "q:" + searchkey );
+        Log.d(getClass().getName(), "q:" + searchkey);
         getParams.add(new BasicNameValuePair("q", searchkey));
 
 
@@ -266,7 +273,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private void displayPoi() {
 
         JSONArray poilistJsonArray = rootJsonObject.optJSONArray("poilist");
-        Map<String, String> map = null;
+        Map<String, Object> map = null;
         for (int i = 0; i < poilistJsonArray.length(); i++) {
             JSONObject poiJsonObject = poilistJsonArray.optJSONObject(i);
 
@@ -286,7 +293,10 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             }
 
 
-            map = new HashMap<String, String>();
+            map = new HashMap<String, Object>();
+            map.put("x",longitude);
+            map.put("y", latitude);
+
             map.put("name", name);
             map.put("address", address);
             map.put("distance", distanceStr);
@@ -350,15 +360,15 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             }
 
 
-            Map<String, String> currentLineMap = datas.get(position);
+            Map<String, Object> currentLineMap = datas.get(position);
 
             TextView poi_name = (TextView) layout.findViewById(R.id.poi_name);
             TextView poi_address = (TextView) layout.findViewById(R.id.poi_address);
             TextView poi_distance = (TextView) layout.findViewById(R.id.poi_distance);
 
-            poi_name.setText(currentLineMap.get("name"));
-            poi_address.setText(currentLineMap.get("address"));
-            poi_distance.setText(currentLineMap.get("distance"));
+            poi_name.setText(currentLineMap.get("name").toString());
+            poi_address.setText(currentLineMap.get("address").toString());
+            poi_distance.setText(currentLineMap.get("distance").toString());
 
             if (convertView != null) {
                 convertView.setOnClickListener(new View.OnClickListener() {
@@ -387,4 +397,108 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
         }
     }
+
+    /**
+     * 显示所有的数据在地图中
+     */
+    private void displayMapPOI() {
+        listView.setVisibility(View.GONE);
+
+        ViewStub viewStub1 = (ViewStub) findViewById(R.id.map_viewStub);
+        if (viewStub1 != null) {
+            viewStub1.inflate(); // 解释并加载viewStub,加载之后viewstub就被释放了，viewstub1就会成为null,因此要加非空判断
+
+            View view = null;
+            view = findViewById(R.id.bd_mapviewLayout);
+            mapView = (MapView) view.findViewById(R.id.mapview);
+            //设置启用内置的缩放控件
+            mapController = mapView.getController();
+
+            itemizedOverlay = new ItemizedOverlay(getResources().getDrawable(R.drawable.ic_loc_normal), mapView);
+            mapView.getOverlays().add(itemizedOverlay);
+
+
+            mapController.setZoom(12);
+
+            displayMyLocation(currentLocation);
+            displayAllPoiPoint();
+        }
+    }
+
+    private void displayMyLocation(BDLocation bdLocation) {
+
+        currentLocation = bdLocation;
+
+        Log.d(getClass().getName(), "Current location, " + bdLocation.getLatitude() + " " + bdLocation.getLongitude());
+
+        //让地图中心点移动
+        GeoPoint geoPoint = new GeoPoint((int) (bdLocation.getLatitude() * 1E6), (int) (bdLocation.getLongitude() * 1E6));
+        //mapController.setCenter(geoPoint);
+        mapController.animateTo(geoPoint);
+
+        //添加当前位置覆盖物
+        if (myLocationOverlay != null) {
+            mapView.getOverlays().remove(myLocationOverlay);
+        }
+
+        myLocationOverlay = new MyLocationOverlay(mapView);
+        LocationData locationData = new LocationData();
+        locationData.latitude = bdLocation.getLatitude();
+        locationData.longitude = bdLocation.getLongitude();
+        myLocationOverlay.setData(locationData);
+
+        //添加自己位置的图层
+        mapView.getOverlays().add(myLocationOverlay);
+        mapView.refresh();
+
+    }
+
+    private void displayAllPoiPoint() {
+        itemizedOverlay.removeAll();
+
+        for (int i = 0 ;i < datas.size(); ++i) {
+            Map<String,Object> map = datas.get(i);
+            double longitude = (Double) map.get("x");
+            double latitude = (Double) map.get("y");
+            String name = map.get("name").toString();
+
+            Log.d("xxxxx", "longitude:" + longitude);
+
+            GeoPoint p = new GeoPoint((int) (latitude * 1E6), (int) (longitude * 1E6));
+            OverlayItem item = new OverlayItem(p, name, "");
+
+            item.setMarker(getResources().getDrawable(R.drawable.ic_loc_normal));
+            itemizedOverlay.addItem(item);
+        }
+
+        mapController.zoomToSpan(itemizedOverlay.getLatSpanE6(), itemizedOverlay.getLonSpanE6());
+        mapController.animateTo(itemizedOverlay.getCenter());
+
+        mapView.refresh();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(mapView != null) {
+            mapView.destroy();
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        if(mapView != null) {
+            mapView.onPause();
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        if(mapView != null) {
+            mapView.onResume();
+        }
+        super.onResume();
+    }
+
 }
