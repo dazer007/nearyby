@@ -19,7 +19,7 @@
         <activity android:name=".MainSubMenuActivity"/>
         <activity android:name=".SearchActivity"/>
         <activity android:name=".SearchRefreshWithRangeActivity"/>
-        <activity android:name="com.dazhi.nearby.AbountActivity"/>
+        <activity android:name=".SettingActivity"/>
          <activity android:name="com.dazhi.nearby.SearchRefreshActivity"/>
 
         <!--百度地图的servlet-->

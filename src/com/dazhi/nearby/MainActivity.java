@@ -1,7 +1,6 @@
 package com.dazhi.nearby;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -66,7 +65,7 @@ public class MainActivity extends Activity {
         settingButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, AbountActivity.class);
+                Intent intent = new Intent(MainActivity.this, SettingActivity.class);
                 MainActivity.this.startActivity(intent);
             }
         });

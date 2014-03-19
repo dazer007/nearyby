@@ -63,7 +63,7 @@
             android:headerDividersEnabled="false"
             android:smoothScrollbar="true"
 
-            android:background="@android:color/white"
+            android:background="@drawable/search_item_selector"
             ptr:ptrMode="pullUpFromBottom"
             ptr:ptrHeaderTextColor="#ff0000"
             ptr:ptrHeaderSubTextColor="#0000ff"
