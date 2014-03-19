@@ -4,7 +4,6 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
-              android:background="@drawable/search_item_selector"
               android:padding="5dp">
     <!--FEBE27-->
     <TextView
@@ -38,8 +37,4 @@
             android:layout_height="wrap_content"
             android:text="1.7333km"
             android:textColor="@android:color/black"/>
-    <View
-            android:layout_width="100dp"
-            android:layout_height="10dp"
-            android:layout_toLeftOf="@id/poi_distance"/>
 </RelativeLayout>

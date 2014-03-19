@@ -2,10 +2,18 @@ package com.dazhi.nearby;
 
 import android.app.Application;
 import android.content.Context;
+import android.content.res.AssetManager;
+import android.util.Log;
 import android.widget.Toast;
 import com.baidu.mapapi.BMapManager;
 import com.baidu.mapapi.MKGeneralListener;
 import com.baidu.mapapi.map.MKEvent;
+import com.dazhi.uitls.JsonUtils;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Application 经常用来保存一些全局变量之类
@@ -17,13 +25,21 @@ public class BaiduMapApplication extends Application {
     public boolean m_bKeyRight = true;
     public BMapManager mBMapManager = null;
 
+    public static final String jsonPath = "weibo_location_type.json";
     public static final String strKey = "roA5kr2bSCRqtDeMoicnq64G";
 
     @Override
     public void onCreate() {
         super.onCreate();
         mInstance = this;
+        initWeiboJsonObject(this);
         initEngineManager(this);
+    }
+
+    public void initWeiboJsonObject(Context context) {
+        JsonUtils jsonUtils = JsonUtils.getInstance();
+        JSONObject weibo_jsonObject = jsonUtils.readAssertJSON(context, jsonPath);
+        jsonUtils.setWeibo_jsonObject(weibo_jsonObject);
     }
 
     public void initEngineManager(Context context) {
@@ -74,4 +90,5 @@ public class BaiduMapApplication extends Application {
             }
         }
     }
+
 }
