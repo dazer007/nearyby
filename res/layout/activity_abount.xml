@@ -40,5 +40,4 @@
             android:padding="8dp"
             android:textColor="@android:color/black"
             android:text="软件版本1.0"/>
-
 </LinearLayout>
