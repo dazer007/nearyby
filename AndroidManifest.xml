@@ -17,10 +17,9 @@
             </intent-filter>
         </activity>
         <activity android:name=".MainSubMenuActivity"/>
-        <activity android:name=".SearchActivity"/>
-        <activity android:name=".SearchRefreshWithRangeActivity"/>
+         <activity android:name=".SearchRefreshWithRangeActivity"/>
         <activity android:name=".SettingActivity"/>
-         <activity android:name="com.dazhi.nearby.SearchRefreshActivity"/>
+         <activity android:name=".SearchRefreshActivity"/>
 
         <!--百度地图的servlet-->
         <service android:name="com.baidu.location.f"
