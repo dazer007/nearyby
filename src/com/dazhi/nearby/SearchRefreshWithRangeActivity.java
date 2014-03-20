@@ -2,10 +2,13 @@ package com.dazhi.nearby;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
@@ -31,6 +34,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +53,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private ArrayList<Map<String, Object>> datas = new ArrayList<Map<String, Object>>();
     private PullToRefreshListView mPullRefreshListView;
     private ListView listView;
+    private LinearLayout root;
     private int load_Index = 1;
     private JSONObject rootJsonObject;
 
@@ -57,12 +62,17 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private String searchkey;
     private int range;
     private int[] ranges = {10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000};
+    private boolean actionFlag = true;
 
 
     private MapView mapView;
     private MapController mapController;
     private MyLocationOverlay myLocationOverlay; // 当前位置的覆盖层
-    private ItemizedOverlay itemizedOverlay;
+
+    private PoiOverlay poiOverlay;
+    private PopupOverlay popupOverlay;
+    private int selectedPoiItemIndex = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,9 +97,19 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         btn_action = (ImageButton) findViewById(R.id.btn_action);
         btn_action.setOnClickListener(this);
 
+        root = (LinearLayout) findViewById(R.id.root);
+
+        this.loadListView();
+
+    }
+
+    private void loadListView() {
+        root.removeAllViews();
+        getLayoutInflater().inflate(R.layout.layout_listview, root, true);
+        mPullRefreshListView = (PullToRefreshListView) root.findViewById(R.id.type_listView);
 
         myBaseAdapter = new MyAdapter();
-        mPullRefreshListView = (PullToRefreshListView) findViewById(R.id.type_listView);
+
         // Set a listener to be invoked when the list should be refreshed.
         mPullRefreshListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener<ListView>() {
             @Override
@@ -131,8 +151,8 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
         listView = mPullRefreshListView.getRefreshableView();
         listView.setAdapter(myBaseAdapter);
-
     }
+
 
     @Override
     public void onClick(View view) {
@@ -145,7 +165,16 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 toRefresh();
                 break;
             case R.id.btn_action: // 查询结果展示在地图中
-                displayMapPOI();
+
+                if (actionFlag) {
+                    btn_action.setImageResource(R.drawable.ic_action_map);
+                    initMapView();
+                } else {
+                    btn_action.setImageResource(R.drawable.ic_action_list);
+                    loadListView();
+                }
+                actionFlag = !actionFlag;
+
                 break;
         }
     }
@@ -165,10 +194,12 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         datas.clear();
         load_Index = 0;
         startSearch();
+        if (actionFlag ) {
+            displayMapPOI();
+        }
     }
 
     private void searchPoiByAsycTask() {
-
         String url = "https://api.weibo.com/2/location/pois/search/by_geo.json";
         load_Index++;
 
@@ -294,7 +325,8 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
 
             map = new HashMap<String, Object>();
-            map.put("x",longitude);
+
+            map.put("x", longitude);
             map.put("y", latitude);
 
             map.put("name", name);
@@ -398,30 +430,42 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         }
     }
 
+
+
+    private void initMapView() {
+        root.removeAllViews();
+        getLayoutInflater().inflate(R.layout.layout_bdmap, root, true);
+        mapView = (MapView) root.findViewById(R.id.mapview);
+        //设置启用内置的缩放控件
+        mapController = mapView.getController();
+
+        popupOverlay = new   PopupOverlay(mapView, new PopupClick()); // 弹出窗口，实例化，不用添加
+        poiOverlay = new PoiOverlay(getResources().getDrawable(R.drawable.ic_loc_normal), mapView);
+        mapView.getOverlays().add(poiOverlay);
+
+        mapController.setZoom(14);
+
+
+        displayMapPOI();
+    }
+
     /**
      * 显示所有的数据在地图中
      */
     private void displayMapPOI() {
-        listView.setVisibility(View.GONE);
-
-        ViewStub viewStub1 = (ViewStub) findViewById(R.id.map_viewStub);
-        if (viewStub1 != null) {
-            viewStub1.inflate(); // 解释并加载viewStub,加载之后viewstub就被释放了，viewstub1就会成为null,因此要加非空判断
-
-            View view = null;
-            view = findViewById(R.id.bd_mapviewLayout);
-            mapView = (MapView) view.findViewById(R.id.mapview);
-            //设置启用内置的缩放控件
-            mapController = mapView.getController();
-
-            itemizedOverlay = new ItemizedOverlay(getResources().getDrawable(R.drawable.ic_loc_normal), mapView);
-            mapView.getOverlays().add(itemizedOverlay);
 
 
-            mapController.setZoom(12);
-
+        if (currentLocation != null) {
             displayMyLocation(currentLocation);
-            displayAllPoiPoint();
+        }
+        displayAllPoiPoint();
+    }
+
+    private class PopupClick implements PopupClickListener {
+
+        @Override
+        public void onClickedPopup(int i) {
+            Toast.makeText(SearchRefreshWithRangeActivity.this, "", Toast.LENGTH_LONG).show();
         }
     }
 
@@ -433,7 +477,9 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
         //让地图中心点移动
         GeoPoint geoPoint = new GeoPoint((int) (bdLocation.getLatitude() * 1E6), (int) (bdLocation.getLongitude() * 1E6));
-        //mapController.setCenter(geoPoint);
+
+        mapController.setCenter(geoPoint);
+
         mapController.animateTo(geoPoint);
 
         //添加当前位置覆盖物
@@ -454,32 +500,44 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     }
 
     private void displayAllPoiPoint() {
-        itemizedOverlay.removeAll();
 
-        for (int i = 0 ;i < datas.size(); ++i) {
-            Map<String,Object> map = datas.get(i);
+        poiOverlay.removeAll();
+
+        for (int i = 0; i < datas.size(); ++i) {
+            Map<String, Object> map = datas.get(i);
             double longitude = (Double) map.get("x");
             double latitude = (Double) map.get("y");
             String name = map.get("name").toString();
+            String address = map.get("address").toString();
 
             Log.d("xxxxx", "longitude:" + longitude);
 
             GeoPoint p = new GeoPoint((int) (latitude * 1E6), (int) (longitude * 1E6));
-            OverlayItem item = new OverlayItem(p, name, "");
+
+            OverlayItem item = new OverlayItem(p, name, address);
 
             item.setMarker(getResources().getDrawable(R.drawable.ic_loc_normal));
-            itemizedOverlay.addItem(item);
+            poiOverlay.addItem(item);
         }
 
-        mapController.zoomToSpan(itemizedOverlay.getLatSpanE6(), itemizedOverlay.getLonSpanE6());
-        mapController.animateTo(itemizedOverlay.getCenter());
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mapController.zoomToSpan(poiOverlay.getLatSpanE6(), poiOverlay.getLonSpanE6());
+                mapController.animateTo(poiOverlay.getCenter());
+            }
+        }, 1);
+
+
 
         mapView.refresh();
     }
 
     @Override
     protected void onDestroy() {
-        if(mapView != null) {
+
+        if (mapView != null) {
             mapView.destroy();
         }
         super.onDestroy();
@@ -487,7 +545,8 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
     @Override
     protected void onPause() {
-        if(mapView != null) {
+
+        if (mapView != null) {
             mapView.onPause();
         }
         super.onPause();
@@ -495,10 +554,46 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
     @Override
     protected void onResume() {
-        if(mapView != null) {
+
+        if (mapView != null) {
+
             mapView.onResume();
         }
         super.onResume();
     }
 
+
+    class PoiOverlay extends ItemizedOverlay {
+
+        public PoiOverlay(Drawable drawable, MapView mapView) {
+            super(drawable, mapView);
+        }
+
+        @Override
+        public boolean onTap(GeoPoint geoPoint, MapView mapView) {
+            Toast.makeText(SearchRefreshWithRangeActivity.this, "PoiOverlay onTap", Toast.LENGTH_SHORT).show();
+            if (popupOverlay != null ) {
+                popupOverlay.hidePop();
+            }
+            return super.onTap(geoPoint, mapView);
+        }
+
+        @Override
+        protected boolean onTap(int i) {
+            selectedPoiItemIndex = i;
+            //Toast.makeText(MainActivity.this, "PoiOverlay onTap at " + i, Toast.LENGTH_SHORT).show();
+            OverlayItem item = (OverlayItem) poiOverlay.getItem(i);
+            View popup = getLayoutInflater().inflate(R.layout.popup, null);
+             //popup.setBackgroundResource(R.drawable.placemark_transportation_noarrow);
+            TextView titleTextView = (TextView) popup.findViewById(R.id.titleTextView);
+            titleTextView.setText(item.getTitle());
+
+            TextView snippetTextView = (TextView) popup.findViewById(R.id.snippetTextView);
+            snippetTextView.setText(item.getSnippet());
+
+            popupOverlay.showPopup(popup, item.getPoint(), item.getMarker().getIntrinsicHeight());
+
+            return super.onTap(i);
+        }
+    }
 }

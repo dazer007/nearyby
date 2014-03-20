@@ -51,35 +51,13 @@
             android:gravity="center"
             android:background="@drawable/bg_tab_top"/>
 
-    <com.handmark.pulltorefresh.library.PullToRefreshListView
-            xmlns:ptr="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/type_listView"
+
+    <LinearLayout
+            android:id="@+id/root"
             android:layout_weight="1"
-            android:background="@android:color/white"
+            android:orientation="vertical"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-
-            ptr:ptrMode="pullUpFromBottom"
-            ptr:ptrHeaderTextColor="#ff0000"
-            ptr:ptrHeaderSubTextColor="#0000ff"
-            ptr:ptrAnimationStyle="flip"
-
-            android:cacheColorHint="#00000000"
-            android:divider="#19000000"
-            android:dividerHeight="4dp"
-            android:fadingEdge="none"
-            android:fastScrollEnabled="false"
-            android:footerDividersEnabled="false"
-            android:headerDividersEnabled="false"
-            android:smoothScrollbar="true"
-            />
-
-    <ViewStub
-            android:id="@+id/map_viewStub"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout="@layout/include_map"
-            android:inflatedId="@+id/bd_mapviewLayout"
-            />
+            android:layout_height="0dp">
+    </LinearLayout>
 </LinearLayout>
 
