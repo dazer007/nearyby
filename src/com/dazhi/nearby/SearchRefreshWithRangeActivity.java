@@ -8,10 +8,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.text.format.DateUtils;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewStub;
 import android.widget.*;
 import com.baidu.location.BDLocation;
 import com.baidu.mapapi.map.*;
@@ -34,7 +32,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -194,7 +191,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         datas.clear();
         load_Index = 0;
         startSearch();
-        if (actionFlag ) {
+        if (!actionFlag ) {
             displayMapPOI();
         }
     }
