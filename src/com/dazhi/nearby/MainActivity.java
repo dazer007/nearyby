@@ -76,8 +76,12 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(MainActivity.this, SearchRefreshActivity.class);
-                intent.putExtra("currentLocation", currentLocation);
-                MainActivity.this.startActivity(intent);
+                if (currentLocation != null) {
+                    intent.putExtra("currentLocation", currentLocation);
+                    MainActivity.this.startActivity(intent);
+                } else {
+                    Toast.makeText(MainActivity.this, "正在定位中", Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
@@ -210,6 +214,11 @@ public class MainActivity extends Activity {
         intent.putExtra("bigTypeName", datas.get(position));
         intent.putExtra("currentLocation", currentLocation);
         intent.putExtra("curType", datas.get(position));
-        startActivity(intent);
+        if (currentLocation != null) {
+            startActivity(intent);
+        } else {
+            Toast.makeText(MainActivity.this, "正在定位中", Toast.LENGTH_LONG).show();
+        }
     }
+
 }

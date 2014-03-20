@@ -2,15 +2,20 @@ package com.dazhi.nearby;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.format.DateUtils;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
+import android.view.ViewStub;
 import android.widget.*;
 import com.baidu.location.BDLocation;
+import com.baidu.mapapi.map.*;
+import com.baidu.platform.comapi.basestruct.GeoPoint;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
 import com.handmark.pulltorefresh.library.PullToRefreshListView;
 import com.handmark.pulltorefresh.library.extras.SoundPullEventListener;
@@ -29,6 +34,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,9 +50,10 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private BDLocation currentLocation;
 
     private MyAdapter myBaseAdapter = null;
-    private ArrayList<Map<String, String>> datas = new ArrayList<Map<String, String>>();
+    private ArrayList<Map<String, Object>> datas = new ArrayList<Map<String, Object>>();
     private PullToRefreshListView mPullRefreshListView;
     private ListView listView;
+    private LinearLayout root;
     private int load_Index = 1;
     private JSONObject rootJsonObject;
 
@@ -55,7 +62,15 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private String searchkey;
     private int range;
     private int[] ranges = {10000, 9000, 8000, 7000, 6000, 5000, 4000, 3000, 2000, 1000};
+    private boolean actionFlag = true;
 
+
+    private MapView mapView;
+    private MapController mapController;
+    private MyLocationOverlay myLocationOverlay; // 当前位置的覆盖层
+    private PoiOverlay poiOverlay;
+    private PopupOverlay popupOverlay;
+    private int selectedPoiItemIndex = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,9 +95,19 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         btn_action = (ImageButton) findViewById(R.id.btn_action);
         btn_action.setOnClickListener(this);
 
+        root = (LinearLayout) findViewById(R.id.root);
+
+        this.loadListView();
+
+    }
+
+    private void loadListView() {
+        root.removeAllViews();
+        getLayoutInflater().inflate(R.layout.layout_listview, root, true);
+        mPullRefreshListView = (PullToRefreshListView) root.findViewById(R.id.type_listView);
 
         myBaseAdapter = new MyAdapter();
-        mPullRefreshListView = (PullToRefreshListView) findViewById(R.id.type_listView);
+
         // Set a listener to be invoked when the list should be refreshed.
         mPullRefreshListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener<ListView>() {
             @Override
@@ -124,8 +149,8 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
         listView = mPullRefreshListView.getRefreshableView();
         listView.setAdapter(myBaseAdapter);
-
     }
+
 
     @Override
     public void onClick(View view) {
@@ -138,7 +163,14 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 toRefresh();
                 break;
             case R.id.btn_action: // 查询结果展示在地图中
-
+                if (actionFlag) {
+                    btn_action.setImageResource(R.drawable.ic_action_map);
+                    initMapView();
+                } else {
+                    btn_action.setImageResource(R.drawable.ic_action_list);
+                    loadListView();
+                }
+                actionFlag = !actionFlag;
                 break;
         }
     }
@@ -158,10 +190,12 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         datas.clear();
         load_Index = 0;
         startSearch();
+        if (actionFlag ) {
+            displayMapPOI();
+        }
     }
 
     private void searchPoiByAsycTask() {
-
         String url = "https://api.weibo.com/2/location/pois/search/by_geo.json";
         load_Index++;
 
@@ -171,7 +205,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         getParams.add(new BasicNameValuePair("range", range + ""));
         getParams.add(new BasicNameValuePair("count", "20"));
         getParams.add(new BasicNameValuePair("page", load_Index + ""));
-        Log.d(getClass().getName(), "q:" + searchkey );
+        Log.d(getClass().getName(), "q:" + searchkey);
         getParams.add(new BasicNameValuePair("q", searchkey));
 
 
@@ -266,7 +300,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private void displayPoi() {
 
         JSONArray poilistJsonArray = rootJsonObject.optJSONArray("poilist");
-        Map<String, String> map = null;
+        Map<String, Object> map = null;
         for (int i = 0; i < poilistJsonArray.length(); i++) {
             JSONObject poiJsonObject = poilistJsonArray.optJSONObject(i);
 
@@ -286,7 +320,10 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             }
 
 
-            map = new HashMap<String, String>();
+            map = new HashMap<String, Object>();
+            map.put("x", longitude);
+            map.put("y", latitude);
+
             map.put("name", name);
             map.put("address", address);
             map.put("distance", distanceStr);
@@ -350,15 +387,15 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             }
 
 
-            Map<String, String> currentLineMap = datas.get(position);
+            Map<String, Object> currentLineMap = datas.get(position);
 
             TextView poi_name = (TextView) layout.findViewById(R.id.poi_name);
             TextView poi_address = (TextView) layout.findViewById(R.id.poi_address);
             TextView poi_distance = (TextView) layout.findViewById(R.id.poi_distance);
 
-            poi_name.setText(currentLineMap.get("name"));
-            poi_address.setText(currentLineMap.get("address"));
-            poi_distance.setText(currentLineMap.get("distance"));
+            poi_name.setText(currentLineMap.get("name").toString());
+            poi_address.setText(currentLineMap.get("address").toString());
+            poi_distance.setText(currentLineMap.get("distance").toString());
 
             if (convertView != null) {
                 convertView.setOnClickListener(new View.OnClickListener() {
@@ -387,4 +424,160 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
         }
     }
+
+
+    private void initMapView() {
+        root.removeAllViews();
+        getLayoutInflater().inflate(R.layout.layout_bdmap, root, true);
+        mapView = (MapView) root.findViewById(R.id.mapview);
+        //设置启用内置的缩放控件
+        mapController = mapView.getController();
+
+        popupOverlay = new   PopupOverlay(mapView, new PopupClick()); // 弹出窗口，实例化，不用添加
+        poiOverlay = new PoiOverlay(getResources().getDrawable(R.drawable.ic_loc_normal), mapView);
+        mapView.getOverlays().add(poiOverlay);
+
+        mapController.setZoom(14);
+
+
+        displayMapPOI();
+    }
+
+    /**
+     * 显示所有的数据在地图中
+     */
+    private void displayMapPOI() {
+
+        if (currentLocation != null) {
+            displayMyLocation(currentLocation);
+        }
+        displayAllPoiPoint();
+    }
+
+    private class PopupClick implements PopupClickListener {
+
+        @Override
+        public void onClickedPopup(int i) {
+            Toast.makeText(SearchRefreshWithRangeActivity.this, "", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void displayMyLocation(BDLocation bdLocation) {
+
+        currentLocation = bdLocation;
+
+        Log.d(getClass().getName(), "Current location, " + bdLocation.getLatitude() + " " + bdLocation.getLongitude());
+
+        //让地图中心点移动
+        GeoPoint geoPoint = new GeoPoint((int) (bdLocation.getLatitude() * 1E6), (int) (bdLocation.getLongitude() * 1E6));
+        mapController.setCenter(geoPoint);
+        mapController.animateTo(geoPoint);
+
+        //添加当前位置覆盖物
+        if (myLocationOverlay != null) {
+            mapView.getOverlays().remove(myLocationOverlay);
+        }
+
+        myLocationOverlay = new MyLocationOverlay(mapView);
+        LocationData locationData = new LocationData();
+        locationData.latitude = bdLocation.getLatitude();
+        locationData.longitude = bdLocation.getLongitude();
+        myLocationOverlay.setData(locationData);
+
+        //添加自己位置的图层
+        mapView.getOverlays().add(myLocationOverlay);
+        mapView.refresh();
+
+    }
+
+    private void displayAllPoiPoint() {
+        poiOverlay.removeAll();
+
+        for (int i = 0; i < datas.size(); ++i) {
+            Map<String, Object> map = datas.get(i);
+            double longitude = (Double) map.get("x");
+            double latitude = (Double) map.get("y");
+            String name = map.get("name").toString();
+            String address = map.get("address").toString();
+
+            Log.d("xxxxx", "longitude:" + longitude);
+
+            GeoPoint p = new GeoPoint((int) (latitude * 1E6), (int) (longitude * 1E6));
+            OverlayItem item = new OverlayItem(p, name, address);
+
+            item.setMarker(getResources().getDrawable(R.drawable.ic_loc_normal));
+            poiOverlay.addItem(item);
+        }
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mapController.zoomToSpan(poiOverlay.getLatSpanE6(), poiOverlay.getLonSpanE6());
+                mapController.animateTo(poiOverlay.getCenter());
+            }
+        }, 1);
+
+
+        mapView.refresh();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (mapView != null) {
+            mapView.destroy();
+        }
+        super.onDestroy();
+    }
+
+    @Override
+    protected void onPause() {
+        if (mapView != null) {
+            mapView.onPause();
+        }
+        super.onPause();
+    }
+
+    @Override
+    protected void onResume() {
+        if (mapView != null) {
+            mapView.onResume();
+        }
+        super.onResume();
+    }
+
+    class PoiOverlay extends ItemizedOverlay {
+
+        public PoiOverlay(Drawable drawable, MapView mapView) {
+            super(drawable, mapView);
+        }
+
+        @Override
+        public boolean onTap(GeoPoint geoPoint, MapView mapView) {
+            Toast.makeText(SearchRefreshWithRangeActivity.this, "PoiOverlay onTap", Toast.LENGTH_SHORT).show();
+            if (popupOverlay != null ) {
+                popupOverlay.hidePop();
+            }
+            return super.onTap(geoPoint, mapView);
+        }
+
+        @Override
+        protected boolean onTap(int i) {
+            selectedPoiItemIndex = i;
+            //Toast.makeText(MainActivity.this, "PoiOverlay onTap at " + i, Toast.LENGTH_SHORT).show();
+            OverlayItem item = (OverlayItem) poiOverlay.getItem(i);
+            View popup = getLayoutInflater().inflate(R.layout.popup, null);
+             //popup.setBackgroundResource(R.drawable.placemark_transportation_noarrow);
+            TextView titleTextView = (TextView) popup.findViewById(R.id.titleTextView);
+            titleTextView.setText(item.getTitle());
+
+            TextView snippetTextView = (TextView) popup.findViewById(R.id.snippetTextView);
+            snippetTextView.setText(item.getSnippet());
+
+            popupOverlay.showPopup(popup, item.getPoint(), item.getMarker().getIntrinsicHeight());
+
+            return super.onTap(i);
+        }
+    }
+
 }
