@@ -12,6 +12,11 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.baidu.mapapi.map.LocationData;
+import com.baidu.mapapi.map.MapController;
+import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MyLocationOverlay;
+import com.baidu.platform.comapi.basestruct.GeoPoint;
 import com.dazhi.uitls.JsonUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,6 +25,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends Activity {
+    private MapView mapView = null;
+    private Button locateMeButton;
+    private MapController mapController;
+    private LocationClient locationClient;
     private List<String> datas = new ArrayList<String>(8);
     private ArrayAdapter<String> arrayAdapter;
     private ListView listView;
@@ -38,8 +47,33 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+ //注意：请在试用setContentView前初始化BMapManager对象，否则会报错
         setContentView(R.layout.activity_main);
+        mapView = (MapView)findViewById(R.id.bmapsView);
+ //设置启用内置的缩放控件
+        mapController = mapView.getController();
+ //得到mMapView的控制权，可以用它控制盒驱动平移和缩放
+ // GeoPoint point = new GeoPoint((int) (34.915 * 1E6), (int) (108.404 * 1E6));
+ //用给定的经纬度构造一个GeoPoint,单位是微度（度 * 1E6）
+ //mMapController.setCenter(point);//设置地图中心点
+        mapController.setZoom(12);
 
+        locationClient = new LocationClient(this);
+        locationClient.registerLocationListener(new BDLocationListener() {
+            @Override
+            public void onReceiveLocation(BDLocation bdLocation) {
+                //定位成功后，关闭location client,不然通知栏会一直有gps定位中得到图标
+                locationClient.stop();
+
+                Toast.makeText(MainActivity.this,"定位完毕" + bdLocation.getAddrStr(), Toast.LENGTH_SHORT).show();
+                doReceiveLocation(bdLocation);
+            }
+
+            @Override
+            public void onReceivePoi(BDLocation bdLocation) {
+                  Toast.makeText(MainActivity.this,"定位完毕" +bdLocation.getAddrStr(),Toast.LENGTH_SHORT).show();
+            }
+        });
         bigTypeName = getIntent().getStringExtra("bigTypeName");
         middleTypeName = getIntent().getStringExtra("middleTypeName");
 
@@ -86,8 +120,29 @@ public class MainActivity extends Activity {
         });
     }
 
+    private void doReceiveLocation(BDLocation bdLocation) {
+        setTitle(bdLocation.getAddrStr());
+
+        //让地图中心点移动
+        GeoPoint geoPoint = new GeoPoint((int) (bdLocation.getLatitude() * 1E6), (int) (bdLocation.getLongitude() * 1E6));
+        mapController.setCenter(geoPoint);
+
+        //添加当前位置覆盖物
+        MyLocationOverlay myLocationOverlay = new MyLocationOverlay(mapView);
+        LocationData locationData = new LocationData();
+        locationData.latitude = bdLocation.getLatitude();
+        locationData.longitude = bdLocation.getLongitude();
+        myLocationOverlay.setData(locationData);
+
+        //添加图层
+        mapView.getOverlays().add(myLocationOverlay);
+
+        mapView.refresh();
+    }
+
     @Override
     protected void onResume() {
+        mapView.onResume();
         if (currentLocation == null) {
             startLocation();
         }
@@ -96,12 +151,14 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        mapView.destroy();
         stopLocation();
         super.onDestroy();
     }
 
     @Override
     protected void onPause() {
+        mapView.onPause();
         //stopLocation();
         super.onPause();
     }
@@ -121,8 +178,28 @@ public class MainActivity extends Activity {
         option.setNeedDeviceDirect(true);//返回的定位结果包含手机机头的方向
         mLocClient.setLocOption(option);
 
+        locationClient.setLocOption(option);
+
         bdLocationListener = new MyLocationListener();
         mLocClient.registerLocationListener(bdLocationListener);
+
+        locateMeButton = (Button) findViewById(R.id.locateMeButton);
+        locateMeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                locateMe();
+                //To change body of implemented methods use File | Settings | File Templates.
+            }
+        });
+    }
+
+    private void locateMe() {
+           if (!locationClient.isStarted()){
+               locationClient.start();
+           }
+           locationClient.requestLocation();
+
+           Toast.makeText(this,"开始定位",Toast.LENGTH_SHORT).show();
     }
 
     /**

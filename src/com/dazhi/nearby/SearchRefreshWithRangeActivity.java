@@ -68,9 +68,11 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private MapView mapView;
     private MapController mapController;
     private MyLocationOverlay myLocationOverlay; // 当前位置的覆盖层
+
     private PoiOverlay poiOverlay;
     private PopupOverlay popupOverlay;
     private int selectedPoiItemIndex = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -163,6 +165,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 toRefresh();
                 break;
             case R.id.btn_action: // 查询结果展示在地图中
+
                 if (actionFlag) {
                     btn_action.setImageResource(R.drawable.ic_action_map);
                     initMapView();
@@ -171,6 +174,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                     loadListView();
                 }
                 actionFlag = !actionFlag;
+
                 break;
         }
     }
@@ -321,6 +325,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
 
             map = new HashMap<String, Object>();
+
             map.put("x", longitude);
             map.put("y", latitude);
 
@@ -426,6 +431,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     }
 
 
+
     private void initMapView() {
         root.removeAllViews();
         getLayoutInflater().inflate(R.layout.layout_bdmap, root, true);
@@ -447,6 +453,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
      * 显示所有的数据在地图中
      */
     private void displayMapPOI() {
+
 
         if (currentLocation != null) {
             displayMyLocation(currentLocation);
@@ -470,7 +477,9 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
         //让地图中心点移动
         GeoPoint geoPoint = new GeoPoint((int) (bdLocation.getLatitude() * 1E6), (int) (bdLocation.getLongitude() * 1E6));
+
         mapController.setCenter(geoPoint);
+
         mapController.animateTo(geoPoint);
 
         //添加当前位置覆盖物
@@ -491,6 +500,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     }
 
     private void displayAllPoiPoint() {
+
         poiOverlay.removeAll();
 
         for (int i = 0; i < datas.size(); ++i) {
@@ -503,6 +513,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             Log.d("xxxxx", "longitude:" + longitude);
 
             GeoPoint p = new GeoPoint((int) (latitude * 1E6), (int) (longitude * 1E6));
+
             OverlayItem item = new OverlayItem(p, name, address);
 
             item.setMarker(getResources().getDrawable(R.drawable.ic_loc_normal));
@@ -519,11 +530,13 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         }, 1);
 
 
+
         mapView.refresh();
     }
 
     @Override
     protected void onDestroy() {
+
         if (mapView != null) {
             mapView.destroy();
         }
@@ -532,6 +545,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
     @Override
     protected void onPause() {
+
         if (mapView != null) {
             mapView.onPause();
         }
@@ -540,11 +554,14 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
     @Override
     protected void onResume() {
+
         if (mapView != null) {
+
             mapView.onResume();
         }
         super.onResume();
     }
+
 
     class PoiOverlay extends ItemizedOverlay {
 
@@ -579,5 +596,4 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             return super.onTap(i);
         }
     }
-
 }
