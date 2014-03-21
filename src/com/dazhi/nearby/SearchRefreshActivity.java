@@ -3,6 +3,7 @@ package com.dazhi.nearby;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -42,7 +43,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
     private BDLocation currentLocation;
 
     private SimpleAdapter simpleAdapter;
-    private ArrayList<Map<String, String>> datas = new ArrayList<Map<String, String>>();
+    private ArrayList<Map<String, Object>> datas = new ArrayList<Map<String, Object>>();
     private PullToRefreshListView mPullRefreshListView;
     private ListView listView;
     private int load_Index = 1;
@@ -114,13 +115,21 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             View v = super.getView(position, convertView, parent);
             v.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Toast.makeText(SearchRefreshActivity.this, "wwww", Toast.LENGTH_SHORT).show();
-                    displayMap();
+                    Intent intent = new Intent(SearchRefreshActivity.this, BDMapAcitivity.class);
+                    intent.putExtra("currentLocation", currentLocation);
+                    intent.putExtra("distance", datas.get(position).get("distance").toString());
+                    intent.putExtra("name", datas.get(position).get("name").toString());
+                    intent.putExtra("address", datas.get(position).get("address").toString());
+                    intent.putExtra("citycode", datas.get(position).get("citycode").toString());
+                    intent.putExtra("tel", datas.get(position).get("tel").toString());
+                    intent.putExtra("x", (Double) datas.get(position).get("x"));
+                    intent.putExtra("y", (Double) datas.get(position).get("y"));
+                    startActivity(intent);
                 }
             });
             return v;
@@ -256,13 +265,15 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
     private void displayPoi() {
 
         JSONArray poilistJsonArray = rootJsonObject.optJSONArray("poilist");
-        Map<String, String> map = null;
+        Map<String, Object> map = null;
         for (int i = 0; i < poilistJsonArray.length(); i++) {
             JSONObject poiJsonObject = poilistJsonArray.optJSONObject(i);
 
 
             String name = poiJsonObject.optString("name");
             String address = poiJsonObject.optString("address");
+            String citycode = poiJsonObject.optString("citycode"); // 城市编码
+            String tel = poiJsonObject.optString("tel");
 
             double longitude = poiJsonObject.optDouble("x");
             double latitude = poiJsonObject.optDouble("y");
@@ -276,10 +287,14 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
             }
 
 
-            map = new HashMap<String, String>();
+            map = new HashMap<String, Object>();
             map.put("name", name);
             map.put("address", address);
             map.put("distance", distanceStr);
+            map.put("citycode", citycode);
+            map.put("tel", tel);
+            map.put("x",longitude);
+            map.put("y",latitude);
             datas.add(map);
         }
 

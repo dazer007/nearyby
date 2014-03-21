@@ -2,6 +2,7 @@ package com.dazhi.nearby;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -381,7 +382,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         }
 
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             RelativeLayout layout = (RelativeLayout) convertView;
             // 重用组件
             if (convertView == null) {
@@ -403,7 +404,13 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 convertView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Toast.makeText(SearchRefreshWithRangeActivity.this, "bbb", Toast.LENGTH_LONG).show();
+                        Intent intent = new Intent(SearchRefreshWithRangeActivity.this, BDMapAcitivity.class);
+                        intent.putExtra("distance", datas.get(position).get("distance").toString());
+                        intent.putExtra("name", datas.get(position).get("name").toString());
+                        intent.putExtra("address", datas.get(position).get("address").toString());
+                        intent.putExtra("citycode", datas.get(position).get("citycode").toString());
+                        intent.putExtra("tel", datas.get(position).get("tel").toString());
+                        startActivity(intent);
                     }
                 });
             }

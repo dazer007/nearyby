@@ -4,11 +4,13 @@
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent">
-    <RelativeLayout
+    <LinearLayout
             android:background="@drawable/bg_title_bar"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="4dp"
+            android:padding="2dp"
             >
         <ImageButton
                 android:id="@+id/btn_back"
@@ -17,45 +19,114 @@
                 android:src="@drawable/ic_nav_back"
                 android:background="@drawable/btn_weight_selector"/>
         <TextView
-                android:layout_centerInParent="true"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
+                android:layout_weight="1"
                 android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="详细信息"
                 android:textSize="15dp"
-                android:textColor="@android:color/white"
-                android:text="详细信息"/>
+                android:textColor="@android:color/white"/>
         <ImageButton
-                android:id="@+id/btn_route"
-                android:layout_alignParentRight="true"
+                android:id="@+id/btn_go"
+                android:layout_marginRight="1dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/ic_action_route"
-                android:background="@drawable/ic_action_route"/>
+                android:background="@drawable/btn_weight_selector"/>
+    </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:background="@android:color/white"
+            android:orientation="horizontal">
+        <Button
+                android:id="@+id/foot"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:drawableLeft="@drawable/ic_byfoot"
+                android:background="@android:color/transparent"
+                android:text="步行"
+                />
+        <Button
+                android:id="@+id/bus"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="公交"
+                android:background="@android:color/transparent"
+                />
+        <Button
+                android:id="@+id/car"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:drawableLeft="@drawable/ic_bycar"
+                android:text="驾车"
+                android:background="@android:color/transparent"
+                />
+    </LinearLayout>
+
+    <RelativeLayout
+            android:layout_weight="1"
+            android:background="@android:color/white"
+            android:layout_width="match_parent"
+            android:layout_height="0dp">
+        <com.baidu.mapapi.map.MapView
+                android:id="@+id/mapview"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="26dp"
+                android:padding="4dp"
+                android:background="#7f000000"
+                android:textSize="14dp"
+                android:textColor="@android:color/white"
+                android:text="全程约130km,耗时约8分钟"/>
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="#7f000000"
+                android:padding="4dp"
+                android:layout_alignParentBottom="true"
+                android:orientation="vertical">
+            <TextView
+                    android:id="@+id/name"
+                    android:layout_width="match_parent"
+                    android:layout_height="30dp"
+                    android:textSize="14dp"
+                    android:textColor="@android:color/white"
+                    android:text="电子科技大学"/>
+            <TextView
+                    android:id="@+id/address"
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:textSize="14dp"
+                    android:textColor="@android:color/white"
+                    android:text="西安市"/>
+        </LinearLayout>
     </RelativeLayout>
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"      >
-    <Button
-
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="步行"
-            />
+            android:orientation="horizontal"
+            android:padding="10dp"
+            android:background="@android:color/white">
+        <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/ic_phone"
+                />
 
-    <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="公交"
-            />
-    <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="驾车"
-            />
-           </LinearLayout>
-
-        </LinearLayout>
+       <TextView
+               android:layout_width="0dp"
+               android:layout_weight="1"
+               android:layout_marginLeft="10dp"
+               android:text="暂无电话"
+               android:textSize="14dp"
+               android:layout_height="wrap_content"/>
+    </LinearLayout>
+</LinearLayout>
