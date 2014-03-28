@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
@@ -75,7 +76,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
                         DateUtils.FORMAT_SHOW_TIME | DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_ABBREV_ALL);
 
                 // Update the LastUpdatedLabel
-                refreshView.getLoadingLayoutProxy().setLastUpdatedLabel(label);
+                //refreshView.getLoadingLayoutProxy().setLastUpdatedLabel(label);
 
                 // Do work to refresh the list here.
                 searchPoiByAsycTask();
@@ -96,15 +97,6 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
             }
         });
 
-        /**
-         * Add Sound Event Listener
-         */
-        SoundPullEventListener<ListView> soundListener = new SoundPullEventListener<ListView>(this);
-        soundListener.addSoundEvent(PullToRefreshBase.State.PULL_TO_REFRESH, R.raw.pull_event);
-        soundListener.addSoundEvent(PullToRefreshBase.State.RESET, R.raw.reset_sound);
-        soundListener.addSoundEvent(PullToRefreshBase.State.REFRESHING, R.raw.refreshing_sound);
-        mPullRefreshListView.setOnPullEventListener(soundListener);
-
         listView = mPullRefreshListView.getRefreshableView();
         listView.setAdapter(simpleAdapter);
     }
@@ -122,6 +114,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
                 public void onClick(View view) {
                     Intent intent = new Intent(SearchRefreshActivity.this, BDMapAcitivity.class);
                     intent.putExtra("currentLocation", currentLocation);
+                    intent.putExtra("searchLocation",(Parcelable) (datas.get(position).get("bdLocation")));
                     intent.putExtra("distance", datas.get(position).get("distance").toString());
                     intent.putExtra("name", datas.get(position).get("name").toString());
                     intent.putExtra("address", datas.get(position).get("address").toString());
@@ -295,6 +288,11 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
             map.put("tel", tel);
             map.put("x",longitude);
             map.put("y",latitude);
+
+            BDLocation bdLocation = new BDLocation();
+            bdLocation.setLatitude(latitude);
+            bdLocation.setLongitude(longitude);
+            map.put("bdLocation", bdLocation);
             datas.add(map);
         }
 

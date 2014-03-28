@@ -2,18 +2,12 @@ package com.dazhi.nearby;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.res.AssetManager;
-import android.util.Log;
 import android.widget.Toast;
 import com.baidu.mapapi.BMapManager;
 import com.baidu.mapapi.MKGeneralListener;
 import com.baidu.mapapi.map.MKEvent;
 import com.dazhi.uitls.JsonUtils;
-import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.io.IOException;
-import java.io.InputStream;
 
 /**
  * Application 经常用来保存一些全局变量之类
