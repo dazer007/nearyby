@@ -3,6 +3,7 @@
               android:orientation="vertical"
               android:layout_width="fill_parent"
               android:layout_height="fill_parent"
+              android:layout_gravity="center_horizontal"
               android:background="@android:color/white">
 
     <RelativeLayout
@@ -43,14 +44,20 @@
                 android:background="@drawable/btn_weight_selector"/>
     </RelativeLayout>
 
-    <Spinner
+
+     <LinearLayout
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:orientation="vertical">
+         <Spinner
             android:id="@+id/select_range"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
             android:entries="@array/range"
-            android:gravity="center"
             android:background="@drawable/bg_tab_top"/>
-
+    </LinearLayout>
+   
 
     <LinearLayout
             android:id="@+id/root"

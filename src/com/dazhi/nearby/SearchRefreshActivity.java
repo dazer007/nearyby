@@ -1,22 +1,11 @@
 package com.dazhi.nearby;
 
-import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.Context;
-import android.content.Intent;
-import android.graphics.Color;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Parcelable;
-import android.text.format.DateUtils;
-import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.*;
-import com.baidu.location.BDLocation;
-import com.handmark.pulltorefresh.library.PullToRefreshBase;
-import com.handmark.pulltorefresh.library.PullToRefreshListView;
-import com.handmark.pulltorefresh.library.extras.SoundPullEventListener;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
@@ -31,8 +20,29 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.util.*;
+import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.os.Parcelable;
+import android.text.format.DateUtils;
+import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ListView;
+import android.widget.SimpleAdapter;
+import android.widget.Toast;
+
+import com.baidu.location.BDLocation;
+import com.handmark.pulltorefresh.library.PullToRefreshBase;
+import com.handmark.pulltorefresh.library.PullToRefreshListView;
+
+import static com.dazhi.uitls.MapUitls.getDistance;
 
 /**
  * 搜索周边信息的Activity，用法参加百度map demo :PoiSearchDemo.java
@@ -43,7 +53,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
     private EditText searchkey;
     private BDLocation currentLocation;
 
-    private SimpleAdapter simpleAdapter;
+    private PoiListAdatpter simpleAdapter;
     private ArrayList<Map<String, Object>> datas = new ArrayList<Map<String, Object>>();
     private PullToRefreshListView mPullRefreshListView;
     private ListView listView;
@@ -66,7 +76,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
         currentLocation = getIntent().getParcelableExtra("currentLocation");
 
 
-        simpleAdapter = new MySimpleAdapter(this, datas, R.layout.search_activity_item_list, new String[]{"name","address","distance"},new int[]{R.id.poi_name, R.id.poi_address, R.id.poi_distance});
+        simpleAdapter = new PoiListAdatpter(this, datas, R.layout.search_activity_item_list, new String[]{"name","address","distance"},new int[]{R.id.poi_name, R.id.poi_address, R.id.poi_distance});
         mPullRefreshListView = (PullToRefreshListView) findViewById(R.id.type_listView);
         // Set a listener to be invoked when the list should be refreshed.
         mPullRefreshListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener<ListView>() {
@@ -101,8 +111,8 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
         listView.setAdapter(simpleAdapter);
     }
 
-    private class MySimpleAdapter extends SimpleAdapter {
-        public MySimpleAdapter(Context context, List<? extends Map<String, ?>> data, int resource, String[] from, int[] to) {
+    private class PoiListAdatpter extends SimpleAdapter {
+        public PoiListAdatpter(Context context, List<? extends Map<String, ?>> data, int resource, String[] from, int[] to) {
             super(context, data, resource, from, to);
         }
 
@@ -116,7 +126,7 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
                     intent.putExtra("currentLocation", currentLocation);
                     intent.putExtra("searchLocation",(Parcelable) (datas.get(position).get("bdLocation")));
                     intent.putExtra("distance", datas.get(position).get("distance").toString());
-                    intent.putExtra("name", datas.get(position).get("name").toString());
+                    intent.putExtra("poiName", datas.get(position).get("name").toString());
                     intent.putExtra("address", datas.get(position).get("address").toString());
                     intent.putExtra("citycode", datas.get(position).get("citycode").toString());
                     intent.putExtra("tel", datas.get(position).get("tel").toString());
@@ -206,7 +216,6 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
             protected Integer doInBackground(Integer... params) {
                 try {
                     HttpResponse response = client.execute(request);
-
 
                     String resultJsonStr = EntityUtils.toString(response.getEntity());
 
@@ -302,29 +311,4 @@ public class SearchRefreshActivity extends Activity implements View.OnClickListe
         simpleAdapter.notifyDataSetChanged();
 
     }
-
-    /**
-     * google maps的脚本里代码
-     */
-    private static double EARTH_RADIUS = 6378.137;
-
-    private static double rad(double d) {
-        return d * Math.PI / 180.0;
-    }
-
-    /**
-     * 根据两点间经纬度坐标（double值），计算两点间距离，单位为米
-     */
-    public static double getDistance(double lat1, double lng1, double lat2, double lng2) {
-        double radLat1 = rad(lat1);
-        double radLat2 = rad(lat2);
-        double a = radLat1 - radLat2;
-        double b = rad(lng1) - rad(lng2);
-        double s = 2 * Math.asin(Math.sqrt(Math.pow(Math.sin(a / 2), 2) +
-                Math.cos(radLat1) * Math.cos(radLat2) * Math.pow(Math.sin(b / 2), 2)));
-        s = s * EARTH_RADIUS;
-        s = Math.round(s * 1000);
-        return s;
-    }
-
 }

@@ -1,26 +1,48 @@
 package com.dazhi.nearby;
 
+import java.util.ArrayList;
+
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
+
 import com.baidu.location.BDLocation;
 import com.baidu.mapapi.BMapManager;
-import com.baidu.mapapi.map.*;
-import com.baidu.mapapi.search.*;
+import com.baidu.mapapi.map.LocationData;
+import com.baidu.mapapi.map.MKEvent;
+import com.baidu.mapapi.map.MapController;
+import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.map.MyLocationOverlay;
+import com.baidu.mapapi.map.RouteOverlay;
+import com.baidu.mapapi.map.TransitOverlay;
+import com.baidu.mapapi.search.MKAddrInfo;
+import com.baidu.mapapi.search.MKBusLineResult;
+import com.baidu.mapapi.search.MKDrivingRouteResult;
+import com.baidu.mapapi.search.MKPlanNode;
+import com.baidu.mapapi.search.MKPoiResult;
+import com.baidu.mapapi.search.MKRoute;
+import com.baidu.mapapi.search.MKSearch;
+import com.baidu.mapapi.search.MKSearchListener;
+import com.baidu.mapapi.search.MKShareUrlResult;
+import com.baidu.mapapi.search.MKSuggestionResult;
+import com.baidu.mapapi.search.MKTransitRouteResult;
+import com.baidu.mapapi.search.MKWalkingRouteResult;
 import com.baidu.platform.comapi.basestruct.GeoPoint;
-
-import java.util.ArrayList;
+import com.dazhi.uitls.MapUitls;
 
 public class BDMapAcitivity extends Activity implements View.OnClickListener {
     private ImageButton back;
     private Button foot, bus, car;
     private ImageButton go;
+    private TextView route;
     private MapView mMapView;
     private MapController mapController;
     private MyLocationOverlay myLocationOverlay;
@@ -34,6 +56,7 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
     private static final int MODE_WALKING = 1;
     private static final int MODE_TRANSIT = 2;
     private static final int MODE_DRIVING = 3;
+    private double distance = 0;
     private boolean routeFlag = false;
     private int routeMode = 1;
 
@@ -53,10 +76,11 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
              */
             app.mBMapManager.init(BaiduMapApplication.strKey, new BaiduMapApplication.MyGeneralListener());
         }
-        setContentView(R.layout.activity_going);
+        setContentView(R.layout.activity_map);
 
         dialog = new ProgressDialog(this);
         dialog.setMessage("路径规划中...");
+        dialog.setCanceledOnTouchOutside(false);
 
         currentLocation = getIntent().getParcelableExtra("currentLocation");
         GeoPoint startPoint = new GeoPoint((int) (currentLocation.getLatitude() * 1E6), (int) (currentLocation.getLongitude() * 1E6));
@@ -100,11 +124,7 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
                 if (routeFlag) {
                     displayTransiteRoute(mkTransitRouteResult, i); // 公交路线
                 } else {
-                    try {
-                        addTransitePath(mkTransitRouteResult, i);
-                    } catch (Exception e) {
-                        Log.e(getClass().getName(), e.getMessage(), e);
-                    }
+                    addTransitePath(mkTransitRouteResult, i);
                 }
                 dialog.dismiss();
             }
@@ -153,6 +173,31 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
         });
 
 
+        
+        //添加搜索点的信息
+        Bundle bundle = getIntent().getExtras();
+        String poiName = bundle.getString("poiName");
+        String address = bundle.getString("address");
+        String tel = bundle.getString("tel");
+        Double x = bundle.getDouble("x");
+        Double y = bundle.getDouble("y");
+        
+        TextView poiNameTextView = (TextView) findViewById(R.id.poiName);
+        poiNameTextView.setText(poiName);
+        
+        TextView addressTextView = (TextView) findViewById(R.id.address);
+        addressTextView.setText(address);
+        
+        if (tel.isEmpty()) {
+			tel = "暂无电话";
+		}
+        TextView telTextView = (TextView) findViewById(R.id.tel);
+        telTextView.setText(tel);
+        
+        route = (TextView) findViewById(R.id.route);
+        distance = MapUitls.getDistance(y, x, currentLocation.getLatitude(), currentLocation.getLongitude());
+        
+
         //模拟执行点击
         foot.performClick();
     }
@@ -186,12 +231,11 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
         //起点坐标
         GeoPoint start = startPoints.get(0);
         //终点坐标
-        GeoPoint stop = enddPoints.get(enddPoints.size() - 1);
-        //站点数据保存在一个二维数据中
+        GeoPoint stop = enddPoints.get(enddPoints.size() - 1);        //站点数据保存在一个二维数据中
         ArrayList<GeoPoint> allList = new ArrayList<GeoPoint>(size);
         GeoPoint[][] routeData = new GeoPoint[1][];
         //获取所有的点
-        for (int i = 0; i < geoPoints.size() - 1; ++i) {
+        for (int i = 0; i < geoPoints.size(); ++i) {
             allList.addAll(geoPoints.get(i));
         }
         routeData[0] = new GeoPoint[size];
@@ -207,7 +251,8 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
         // 使用zoomToSpan()绽放地图，使路线能完全显示在地图上
         mMapView.getController().zoomToSpan(routeOverlay.getLatSpanE6(), routeOverlay.getLonSpanE6());
         //移动地图到起点
-        mMapView.getController().animateTo(res.getStart().pt);
+        mMapView.getController().animateTo(routeOverlay.getCenter());
+        //mMapView.getController().animateTo(res.getStart().pt);
         //执行刷新使生效
         mMapView.refresh();
     }
@@ -246,7 +291,7 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
         ArrayList<GeoPoint> allList = new ArrayList<GeoPoint>(size);
         GeoPoint[][] routeData = new GeoPoint[1][];
         //获取所有的点
-        for (int i = 0; i < geoPoints.size() - 1; ++i) {
+        for (int i = 0; i < geoPoints.size(); ++i) {
             allList.addAll(geoPoints.get(i));
         }
         routeData[0] = new GeoPoint[size];
@@ -262,12 +307,14 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
         // 使用zoomToSpan()绽放地图，使路线能完全显示在地图上
         mMapView.getController().zoomToSpan(routeOverlay.getLatSpanE6(), routeOverlay.getLonSpanE6());
         //移动地图到起点
-        mMapView.getController().animateTo(res.getStart().pt);
+        //mMapView.getController().animateTo(res.getStart().pt);
+        mMapView.getController().animateTo(routeOverlay.getCenter());
         //执行刷新使生效
         mMapView.refresh();
     }
 
-    private void addTransitePath(MKTransitRouteResult res, int error) throws Exception {
+    //公交路线
+    private void addTransitePath(MKTransitRouteResult res, int error) {
         //起点或终点有歧义，需要选择具体的城市列表或地址列表
         if (error == MKEvent.ERROR_ROUTE_ADDR) {
             return;
@@ -284,26 +331,37 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
         /** 演示自定义路线使用方法
          *  在北京地图上画一个北斗七星
          *  想知道某个点的百度经纬度坐标请点击：http://api.map.baidu.com/lbsapi/getpoint/index.html
+         *
          */
+        Toast.makeText(this, "bus", Toast.LENGTH_SHORT).show();
         ArrayList<ArrayList<GeoPoint>> geoPoints = res.getPlan(0).getRoute(0).getArrayPoints();
         ArrayList<GeoPoint> startPoints = geoPoints.get(0);
         ArrayList<GeoPoint> enddPoints = geoPoints.get(geoPoints.size() - 1);
         //计算所有的点数
         int size = 0;
+        for (int i = 0; i < geoPoints.size(); ++i) {
+            for (int j = 0; j < geoPoints.get(i).size(); ++j) {
+                size++;
+            }
+        }
         for (ArrayList<GeoPoint> arrs : geoPoints) {
             size += arrs.size();
         }
         //起点坐标
         GeoPoint start = startPoints.get(0);
         //终点坐标
-        //GeoPoint stop = enddPoints.get(enddPoints.size() - 1);
         GeoPoint stop = enddPoints.get(enddPoints.size() - 1);
         //站点数据保存在一个二维数据中
         ArrayList<GeoPoint> allList = new ArrayList<GeoPoint>(size);
         GeoPoint[][] routeData = new GeoPoint[1][];
         //获取所有的点
-        for (int i = 0; i < geoPoints.size() - 1; ++i) {
+        for (int i = 0; i < geoPoints.size(); ++i) {
             allList.addAll(geoPoints.get(i));
+        }
+        for (int i = 0; i < geoPoints.size(); ++i) {
+            for (int j = 0; j < geoPoints.get(i).size(); ++j) {
+                size++;
+            }
         }
         routeData[0] = new GeoPoint[size];
         allList.toArray(routeData[0]);
@@ -318,7 +376,8 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
         // 使用zoomToSpan()绽放地图，使路线能完全显示在地图上
         mMapView.getController().zoomToSpan(routeOverlay.getLatSpanE6(), routeOverlay.getLonSpanE6());
         //移动地图到起点
-        mMapView.getController().animateTo(res.getStart().pt);
+        //mMapView.getController().animateTo(res.getStart().pt);
+        mMapView.getController().animateTo(routeOverlay.getCenter());
         //执行刷新使生效
         mMapView.refresh();
     }
@@ -378,6 +437,7 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
         mMapView.refresh();
     }
 
+    // 公交路线
     private void displayTransiteRoute(MKTransitRouteResult res, int error) {
         //起点或终点有歧义，需要选择具体的城市列表或地址列表
         if (error == MKEvent.ERROR_ROUTE_ADDR) {
@@ -419,7 +479,7 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
                 bus.setBackgroundColor(Color.WHITE);
                 routeMode = BDMapAcitivity.MODE_WALKING;
                 routeFlag = false;
-                routeMode = MODE_WALKING;
+                setRouteValue(MapUitls.RATE_WALK);
                 dialog.show();
                 mkSearch.walkingSearch(currentLocation.getCity(), startNode, currentLocation.getCity(), endNode);
                 break;
@@ -429,7 +489,7 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
                 bus.setBackgroundColor(Color.WHITE);
                 routeMode = BDMapAcitivity.MODE_DRIVING;
                 routeFlag = false;
-                routeMode = MODE_DRIVING;
+                setRouteValue(MapUitls.RATE_DRIVER);
                 dialog.show();
                 mkSearch.drivingSearch(currentLocation.getCity(), startNode, currentLocation.getCity(), endNode);
                 break;
@@ -438,8 +498,8 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
                 car.setBackgroundColor(Color.WHITE);
                 foot.setBackgroundColor(Color.WHITE);
                 routeMode = BDMapAcitivity.MODE_TRANSIT;
-                routeMode = MODE_TRANSIT;
                 routeFlag = false;
+                setRouteValue(MapUitls.RATE_BUS);
                 dialog.show();
                 mkSearch.transitSearch(currentLocation.getCity(), startNode, endNode);
                 break;
@@ -489,6 +549,21 @@ public class BDMapAcitivity extends Activity implements View.OnClickListener {
         mMapView.getOverlays().add(myLocationOverlay);
 
         mMapView.refresh();
+    }
+    
+    /**
+     * 设置全程距离，和时间
+     * @param modeRate 速度（km/h）
+     */
+    private void setRouteValue(int modeRate) {
+    	String distanceStr = "";
+    	 if (distance > 1000) {
+             distanceStr = distance / 1000 + "km";
+         } else {
+             distanceStr = distance + "m";
+         }
+    	int time = MapUitls.getTime(distance, modeRate);
+    	 route.setText("全程约" + distanceStr + "耗时" + time + "分钟");
     }
 
     @Override

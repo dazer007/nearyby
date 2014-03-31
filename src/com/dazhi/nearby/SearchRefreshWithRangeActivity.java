@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Parcelable;
 import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.View;
@@ -37,6 +38,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.dazhi.uitls.MapUitls.getDistance;
+
 /**
  * 搜索周边信息的Activity，用法参加百度map demo :PoiSearchDemo.java
  * 使用poi搜索功能,指定搜索范围
@@ -47,7 +50,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private Spinner spinner;
     private BDLocation currentLocation;
 
-    private MyAdapter myBaseAdapter = null;
+    private PoiListAdatpter myBaseAdapter = null;
     private ArrayList<Map<String, Object>> datas = new ArrayList<Map<String, Object>>();
     private PullToRefreshListView mPullRefreshListView;
     private ListView listView;
@@ -106,7 +109,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
         getLayoutInflater().inflate(R.layout.layout_listview, root, true);
         mPullRefreshListView = (PullToRefreshListView) root.findViewById(R.id.type_listView);
 
-        myBaseAdapter = new MyAdapter();
+        myBaseAdapter = new PoiListAdatpter();
 
         // Set a listener to be invoked when the list should be refreshed.
         mPullRefreshListView.setOnRefreshListener(new PullToRefreshBase.OnRefreshListener<ListView>() {
@@ -229,7 +232,6 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
                 if (datas.isEmpty()) {
                     dialog = new ProgressDialog(SearchRefreshWithRangeActivity.this);
                     dialog.setMessage("正在加载，请稍等");
-                    dialog.setCancelable(false);
                     dialog.setCanceledOnTouchOutside(false);
                     dialog.show();
                 }
@@ -299,6 +301,8 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
             String name = poiJsonObject.optString("name");
             String address = poiJsonObject.optString("address");
+            String citycode = poiJsonObject.optString("citycode"); // 城市编码
+            String tel = poiJsonObject.optString("tel");
 
             double longitude = poiJsonObject.optDouble("x");
             double latitude = poiJsonObject.optDouble("y");
@@ -313,16 +317,20 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
 
             map = new HashMap<String, Object>();
-
-            map.put("x", longitude);
-            map.put("y", latitude);
-
             map.put("name", name);
             map.put("address", address);
             map.put("distance", distanceStr);
+            map.put("citycode", citycode);
+            map.put("tel", tel);
+            map.put("x",longitude);
+            map.put("y",latitude);
+
+            BDLocation bdLocation = new BDLocation();
+            bdLocation.setLatitude(latitude);
+            bdLocation.setLongitude(longitude);
+            map.put("bdLocation", bdLocation);
             datas.add(map);
         }
-
 
         // Call onRefreshComplete when the list has been refreshed.
         mPullRefreshListView.onRefreshComplete();
@@ -330,31 +338,7 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
 
     }
 
-    /**
-     * google maps的脚本里代码
-     */
-    private static double EARTH_RADIUS = 6378.137;
-
-    private static double rad(double d) {
-        return d * Math.PI / 180.0;
-    }
-
-    /**
-     * 根据两点间经纬度坐标（double值），计算两点间距离，单位为米
-     */
-    public static double getDistance(double lat1, double lng1, double lat2, double lng2) {
-        double radLat1 = rad(lat1);
-        double radLat2 = rad(lat2);
-        double a = radLat1 - radLat2;
-        double b = rad(lng1) - rad(lng2);
-        double s = 2 * Math.asin(Math.sqrt(Math.pow(Math.sin(a / 2), 2) +
-                Math.cos(radLat1) * Math.cos(radLat2) * Math.pow(Math.sin(b / 2), 2)));
-        s = s * EARTH_RADIUS;
-        s = Math.round(s * 1000);
-        return s;
-    }
-
-    private class MyAdapter extends BaseAdapter {
+    private class PoiListAdatpter extends BaseAdapter {
 
         @Override
         public int getCount() {
@@ -390,20 +374,22 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
             poi_address.setText(currentLineMap.get("address").toString());
             poi_distance.setText(currentLineMap.get("distance").toString());
 
-            if (convertView != null) {
-                convertView.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Intent intent = new Intent(SearchRefreshWithRangeActivity.this, BDMapAcitivity.class);
-                        intent.putExtra("distance", datas.get(position).get("distance").toString());
-                        intent.putExtra("name", datas.get(position).get("name").toString());
-                        intent.putExtra("address", datas.get(position).get("address").toString());
-                        intent.putExtra("citycode", datas.get(position).get("citycode").toString());
-                        intent.putExtra("tel", datas.get(position).get("tel").toString());
-                        startActivity(intent);
-                    }
-                });
-            }
+        	layout.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                	 Intent intent = new Intent(SearchRefreshWithRangeActivity.this, BDMapAcitivity.class);
+                     intent.putExtra("currentLocation", currentLocation);
+                     intent.putExtra("searchLocation",(Parcelable) (datas.get(position).get("bdLocation")));
+                     intent.putExtra("distance", datas.get(position).get("distance").toString());
+                     intent.putExtra("poiName", datas.get(position).get("name").toString());
+                     intent.putExtra("address", datas.get(position).get("address").toString());
+                     intent.putExtra("citycode", datas.get(position).get("citycode").toString());
+                     intent.putExtra("tel", datas.get(position).get("tel").toString());
+                     intent.putExtra("x", (Double) datas.get(position).get("x"));
+                     intent.putExtra("y", (Double) datas.get(position).get("y"));
+                     startActivity(intent);
+                }
+            });
             return layout;
         }
     }
@@ -411,7 +397,6 @@ public class SearchRefreshWithRangeActivity extends Activity implements View.OnC
     private class OnSpinnerItemSelectedImpl implements AdapterView.OnItemSelectedListener {
         @Override
         public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-            String[] allRange = getResources().getStringArray(R.array.range);
             range = ranges[position];
             load_Index = 0;
             datas.clear();

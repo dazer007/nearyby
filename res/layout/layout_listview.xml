@@ -5,13 +5,13 @@
               android:layout_width="match_parent"
               android:layout_height="match_parent">
 
+    <!-- android:background="@drawable/search_item_selector -->
     <com.handmark.pulltorefresh.library.PullToRefreshListView
             xmlns:ptr="http://schemas.android.com/apk/res-auto"
             android:id="@+id/type_listView"
             android:layout_weight="1"
-            android:background="@drawable/search_item_selector"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
 
             ptr:ptrMode="pullUpFromBottom"
             ptr:ptrHeaderTextColor="#ff0000"
